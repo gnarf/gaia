@@ -24,7 +24,8 @@ var ThreadUI = {
 
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozSms` API
-    this._mozSms = navigator.mozSms || window.MockNavigatormozSms;
+    this._mozMobileMessage = navigator.mozMobileMessage ||
+                             window.MockNavigatormozMobileMessage;
 
     // Prevent sendbutton to hide the keyboard:
     this.sendButton.addEventListener(
@@ -228,7 +229,7 @@ var ThreadUI = {
     var kMaxConcatenatedMessages = 10;
 
     // Use backend api for precise sms segmetation information.
-    var smsInfo = this._mozSms.getSegmentInfoForText(value);
+    var smsInfo = this._mozMobileMessage.getSegmentInfoForText(value);
     var segments = smsInfo.segments;
     var availableChars = smsInfo.charsAvailableInLastSegment;
     var counter = '';
@@ -462,6 +463,25 @@ var ThreadUI = {
     // Go to Bottom
     ThreadUI.scrollViewToBottom();
   },
+  createMmsContent: function thui_createMmsContent(dataArray) {
+    // TODO: Contruct MMS bubble HTML content with attachment data.
+    //       Currently, we are only able to display image.
+    var body = '';
+    for (var i = 0; i < dataArray.length; i++) {
+      var mediaString = '';
+      var textString = '';
+      if (dataArray[i].name && dataArray[i].blob) {
+        mediaString = '<img src="' + URL.createObjectURL(dataArray[i].blob) +
+                      '"/>';
+      }
+      if (dataArray[i].text) {
+        textString =
+          LinkHelper.searchAndLinkClickableData(dataArray[i].text);
+      }
+      body += (mediaString + textString);
+    }
+    return body;
+  },
   // Method for rendering the list of messages using infinite scroll
   renderMessages: function thui_renderMessages(filter, callback) {
     // We initialize all params before rendering
@@ -556,14 +576,26 @@ var ThreadUI = {
     }
 
 
-    var bodyHTML = LinkHelper.searchAndLinkClickableData(bodyText);
+    var bodyHTML = '';
+    var pElement = messageDOM.querySelector('p');
+    if (message.type && message.type === 'mms') { // MMS
+      if (message.delivery === 'not-downloaded') {
+        // TODO: We need to handle the mms message with "not-downloaded" status
+      } else {
+        pElement.classList.add('mms-bubble-content');
+        SMIL.parse(message, function(slideArray) {
+          pElement.innerHTML = ThreadUI.createMmsContent(slideArray);
+        });
+      }
+    } else { // SMS
+      bodyHTML = LinkHelper.searchAndLinkClickableData(bodyText);
+    }
     // check for messageDOM paragraph element to assign linked message html
     // For now keeping the containing anchor markup as this
     // structure is part of building blocks.
     // http://buildingfirefoxos.com/building-blocks/lists/
     // Todo: Open bug to fix contaning anchor to div to avoid
     // below extra innerHTML call
-    var pElement = messageDOM.querySelector('p');
     pElement.innerHTML = bodyHTML;
     return messageDOM;
   },
