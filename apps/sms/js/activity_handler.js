@@ -160,50 +160,105 @@ if (!window.location.hash.length) {
         return;
       }
 
-      // The SMS app is already displayed
-      if (!document.mozHidden) {
+      function dispatchNotification(notDownloadedText) {
+        // The SMS app is already displayed
+        if (!document.mozHidden) {
 
-        // TODO: This satisfies the single recipient per thread assumption
-        // but needs to be updated to use threadId
-        var currentThread = MessageManager.currentThread;
-        // If we are in the same thread, only we need to vibrate
-        if (threadId == currentThread) {
-          navigator.vibrate([200, 200, 200]);
-          releaseWakeLock();
-          return;
-        }
-      }
-
-      navigator.mozApps.getSelf().onsuccess = function(evt) {
-        var app = evt.target.result;
-        var iconURL = NotificationHelper.getIconURI(app);
-
-        // Stashing the number at the end of the icon URL to make sure
-        // we get it back even via system message
-        iconURL += '?sms-received?' + number + '?' + id;
-
-        var goToMessage = function() {
-          app.launch();
-          var options = {
-            number: number,
-            id: id
-          };
-          handleMessageNotification(options);
-        };
-
-        Contacts.findByPhoneNumber(message.sender, function gotContact(
-                                                                contact) {
-          var sender;
-          if (contact.length && contact[0].name) {
-            sender = Utils.escapeHTML(contact[0].name[0]);
-          } else {
-            sender = message.sender;
+          // TODO: This satisfies the single recipient per thread assumption
+          // but needs to be updated to use threadId. Please ref bug 868679.
+          var currentThread = MessageManager.currentThread;
+          // If we are in the same thread, only we need to vibrate
+          // XXX: Workaround for threadId bug in 870562.
+          if (threadId && threadId == currentThread) {
+            navigator.vibrate([200, 200, 200]);
+            releaseWakeLock();
+            return;
           }
+        }
 
-          NotificationHelper.send(sender, message.body, iconURL, goToMessage);
-          releaseWakeLock();
-        });
-      };
+        navigator.mozApps.getSelf().onsuccess = function(evt) {
+          var app = evt.target.result;
+          var iconURL = NotificationHelper.getIconURI(app);
+
+          // Stashing the number at the end of the icon URL to make sure
+          // we get it back even via system message
+          iconURL += '?sms-received?' + number + '?' + id;
+
+          var goToMessage = function() {
+            app.launch();
+            var options = {
+              number: number,
+              id: id
+            };
+            handleMessageNotification(options);
+          };
+
+          function callHelper(sender, text) {
+            NotificationHelper.send(sender, text, iconURL, goToMessage);
+            releaseWakeLock();
+          };
+
+          Contacts.findByPhoneNumber(message.sender, function gotContact(
+                                                                  contact) {
+            var sender;
+            if (contact.length && contact[0].name) {
+              sender = Utils.escapeHTML(contact[0].name[0]);
+            } else {
+              sender = message.sender;
+            }
+
+            if (message.type === 'sms') {
+              callHelper(sender, message.body);
+            } else { // mms
+              // If subject exist, we display subject first;
+              // If the message only has text content, display text context;
+              // If there is no subject nor text content, display
+              // 'mms message' in the field.
+              if (notDownloadedText) {
+                callHelper(sender, notDownloadedText);
+              }
+              else if (message.subject) {
+                callHelper(sender, message.subject);
+              } else {
+                SMIL.parse(message, function(slideArray) {
+                  var text, slidesLength = slideArray.length;
+                  for (var i = 0; i < slidesLength; i++) {
+                    if (!slideArray[i].text)
+                      continue;
+
+                    text = slideArray[i].text;
+                    break;
+                  }
+                  text = text ? text : navigator.mozL10n.get('mms-message');
+                  callHelper(sender, text);
+                });
+              }
+            }
+          });
+        };
+      }
+      // If auto-download is enabled, ignore 'not-downloaded' notification while
+      // automatic mode and automatic-home without roaming.
+      // TODO: If auto-download is disabled, we need to dispatch a message to
+      //       remind user that mms message is pending on server.
+      if (message.delivery === 'not-downloaded') {
+        if (!navigator.mozSettings)
+          return;
+        var lock = navigator.mozSettings.createLock();
+        var key = 'ril.mms.retrieval_mode';
+        var inRoaming = window.navigator.mozMobileConnection.voice.roaming;
+        var req = lock.get(key);
+        req.onsuccess = function() {
+          var mode = req.result[key];
+          if (mode === 'automatic' ||
+              (mode === 'automatic-home' && !inRoaming))
+            return;
+
+          dispatchNotification(navigator.mozL10n.get('notDownloaded-title'));
+        };
+      } else {
+        dispatchNotification();
+      }
   });
 
   window.navigator.mozSetMessageHandler('notification',
