@@ -411,15 +411,21 @@
     var msgs = messagesDb.messages.slice();
     var idx = 0;
     var len, continueCursor;
+    var num = filter && filter.numbers;
 
-    if (filter) {
-      if (filter.numbers) {
-        msgs = msgs.filter(function(element, index, array) {
-          var num = filter.numbers;
-          return (num && (num.indexOf(element.sender) != -1 ||
-                          num.indexOf(element.receiver) != -1));
-        });
-      }
+    if (num) {
+      msgs = msgs.filter(function(element, index, array) {
+        if (element.sender && num.indexOf(element.sender) != -1) {
+          return true;
+        }
+        if (element.receiver && num.indexOf(element.receiver) != -1) {
+          return true;
+        }
+        if (element.senderOrReceiver && num.indexOf(element.senderOrReceiver) != -1) {
+          return true;
+        }
+        return false;
+      });
     }
 
     // Sort according to timestamp
