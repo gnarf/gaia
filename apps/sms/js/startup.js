@@ -51,7 +51,9 @@ window.addEventListener('load', function() {
     LazyLoader.load(lazyLoadFiles, function() {
       if (!navigator.mozMobileMessage) {
         LazyLoader.load(['js/sms_mock.js'], function() {
-          MessageManager.init(initUIApp);
+          MockNavigatormozMobileMessage._doneLoadingData(function() {
+            MessageManager.init(initUIApp);
+          });
         });
         return;
       }
