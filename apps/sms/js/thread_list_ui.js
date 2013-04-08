@@ -276,7 +276,12 @@ var ThreadListUI = {
 
     // Retrieving params from thread
     var bodyText = (thread.body || '').split('\n')[0];
-    var bodyHTML = Utils.Message.format(bodyText);
+    var bodyHTML;
+    if (thread.type && thread.type === 'mms') { // MMS
+      bodyHTML = Utils.Message.format(thread.subject || 'no subject');
+    } else { // SMS
+      bodyHTML = Utils.Message.format(bodyText);
+    }
     var formattedDate = Utils.getFormattedHour(timestamp);
     // Create HTML Structure
     var structureHTML = '<label class="danger">' +

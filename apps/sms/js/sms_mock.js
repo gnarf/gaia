@@ -9,8 +9,77 @@
 
 *********************************************************** */
 (function(window) {
+  var MockNavigatormozMobileMessage = window.DesktopMockNavigatormozMobileMessage = {};
 
-  var MockNavigatormozMobileMessage = window.MockNavigatormozMobileMessage = {};
+  var outstandingRequests = 0;
+  var requests = {};
+  function getTestFile(filename, callback) {
+    if (!requests[filename]) {
+      requests[filename] = [];
+      var req = new XMLHttpRequest();
+      req.open('GET', filename, true);
+      req.responseType = 'blob';
+      req.onreadystatechange = function() {
+        if (req.readyState === 4 && req.status === 200) {
+          requests[filename].forEach(function(callback) {
+            callback(req.response);
+            requests[filename].data = req.response;
+          });
+          // we called em, no need to store anymore
+          requests[filename].length = 0;
+        }
+        outstandingRequests--;
+        if (!outstandingRequests) {
+          doneCallbacks.forEach(function(callback) {
+            callback();
+          });
+          doneCallbacks.length = 0;
+        }
+      };
+      requests[filename].push(callback);
+      outstandingRequests++;
+      req.send();
+    } else {
+      if (requests[filename].data) {
+        callback(requests[filename].data);
+      } else {
+        requests[filename].push(callback);
+      }
+    }
+  }
+
+  var doneCallbacks = [];
+  MockNavigatormozMobileMessage._doneLoadingData = function(callback) {
+    if (!outstandingRequests) {
+      callback();
+    } else {
+      doneCallbacks.push(callback);
+    }
+  };
+
+  getTestFile('/test/unit/media/kitten-450.jpg', function(testImageBlob) {
+    messagesDb.messages.push({
+      sender: '052780',
+      type: 'mms',
+      subject: 'test mms message subject',
+      smil: '<smil><body><par><img src="example.jpg"/>' +
+            '<text src="text1"/></par></body></smil>',
+      attachments: [{
+        location: 'text1',
+        content: new Blob(['This is a test message'], { type: 'text/plain' })
+      },{
+        location: 'example.jpg',
+        content: testImageBlob
+      }],
+      timestamp: new Date()
+    });
+    messagesDb.threads.push({
+      senderOrReceiver: '052780',
+      subject: 'Test MMS Image message',
+      type: 'mms',
+      timestamp: new Date()
+    });
+  });
 
   // Fake in-memory message database
   var messagesDb = {
