@@ -61,22 +61,51 @@
     messagesDb.messages.push({
       sender: '052780',
       type: 'mms',
-      subject: 'test mms message subject',
+      subject: 'Test MMS Image message',
       smil: '<smil><body><par><img src="example.jpg"/>' +
             '<text src="text1"/></par></body></smil>',
       attachments: [{
         location: 'text1',
-        content: new Blob(['This is a test message'], { type: 'text/plain' })
+        content: new Blob(['This is an image message'], { type: 'text/plain' })
       },{
         location: 'example.jpg',
         content: testImageBlob
       }],
       timestamp: new Date()
     });
-    messagesDb.threads.push({
-      senderOrReceiver: '052780',
-      subject: 'Test MMS Image message',
+  });
+
+  getTestFile('/test/unit/media/video.ogv', function(testVideoBlob) {
+    messagesDb.messages.push({
+      sender: '052780',
       type: 'mms',
+      subject: 'Test MMS Video message',
+      smil: '<smil><body><par><video src="example.ogv"/>' +
+            '<text src="text1"/></par></body></smil>',
+      attachments: [{
+        location: 'text1',
+        content: new Blob(['This is a video message'], { type: 'text/plain' })
+      },{
+        location: 'example.ogv',
+        content: testVideoBlob
+      }],
+      timestamp: new Date()
+    });
+  });
+  getTestFile('/test/unit/media/audio.ogg', function(testAudioBlob) {
+    messagesDb.messages.push({
+      sender: '052780',
+      type: 'mms',
+      subject: 'Test MMS Video message',
+      smil: '<smil><body><par><audio src="example.ogg"/>' +
+            '<text src="text1"/></par></body></smil>',
+      attachments: [{
+        location: 'text1',
+        content: new Blob(['This is an audio message'], { type: 'text/plain' })
+      },{
+        location: 'example.ogg',
+        content: testAudioBlob
+      }],
       timestamp: new Date()
     });
   });
@@ -190,6 +219,14 @@
       }
     ]
   };
+
+  messagesDb.threads.push({
+    senderOrReceiver: '052780',
+    subject: 'Test MMS message',
+    type: 'mms',
+    timestamp: new Date(),
+    unreadCount: 0
+  });
 
   // Initialize messages with unique IDs
   messagesDb.messages.forEach(function(message) {
