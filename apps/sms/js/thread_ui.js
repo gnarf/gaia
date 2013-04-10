@@ -94,7 +94,8 @@ var ThreadUI = {
     this.sendButton.addEventListener('click', this.sendMessage.bind(this));
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozSms` API
-    this._mozSms = navigator.mozSms || window.MockNavigatormozSms;
+    this._mozMobileMessage = navigator.mozMobileMessage ||
+                             window.MockNavigatormozMobileMessage;
 
     // Prevent sendbutton to hide the keyboard:
     this.sendButton.addEventListener('mousedown',
@@ -242,7 +243,7 @@ var ThreadUI = {
     var kMaxConcatenatedMessages = 10;
 
     // Use backend api for precise sms segmetation information.
-    var smsInfo = this._mozSms.getSegmentInfoForText(value);
+    var smsInfo = this._mozMobileMessage.getSegmentInfoForText(value);
     var segments = smsInfo.segments;
     var availableChars = smsInfo.charsAvailableInLastSegment;
     var counter = '';
@@ -485,7 +486,7 @@ var ThreadUI = {
       var textString = '';
       if (dataArray[i].name && dataArray[i].blob) {
         mediaString = '<img src="' + URL.createObjectURL(dataArray[i].blob) +
-                      '" width="100px"/><br>';
+                      '"/><br>';
       }
       if (dataArray[i].text) {
         textString =
@@ -585,7 +586,7 @@ var ThreadUI = {
     var bodyHTML = '';
     var pElement = messageDOM.querySelector('p');
     if (message.type && message.type === 'mms') { // MMS
-      MessageManager.extractMmsMessage(message, function(slideArray) {
+      SMIL.parse(message, function(slideArray) {
         pElement.innerHTML = ThreadUI.createMmsContent(slideArray);
       });
     } else { // SMS

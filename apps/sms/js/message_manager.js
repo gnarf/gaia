@@ -10,16 +10,15 @@ var MessageManager = {
     }
     this.initialized = true;
     // Allow for stubbing in environments that do not implement the
-    // `navigator.mozSms` API
-    this._mozSms = navigator.mozSms || window.MockNavigatormozSms;
+    // `navigator.mozMobileMessage` API
+    this._mozMobileMessage = navigator.mozMobileMessage ||
+                             window.MockNavigatormozMobileMessage;
 
-    this._mozSms.addEventListener('received',
+    this._mozMobileMessage.addEventListener('received',
         this.onMessageReceived.bind(this));
-    navigator.mozMobileMessage.addEventListener('received',
-        this.onMessageReceived.bind(this));
-    this._mozSms.addEventListener('sending', this.onMessageSending);
-    this._mozSms.addEventListener('sent', this.onMessageSent);
-    this._mozSms.addEventListener('failed', this.onMessageFailed);
+    this._mozMobileMessage.addEventListener('sending', this.onMessageSending);
+    this._mozMobileMessage.addEventListener('sent', this.onMessageSent);
+    this._mozMobileMessage.addEventListener('failed', this.onMessageFailed);
     window.addEventListener('hashchange', this.onHashChange.bind(this));
     document.addEventListener('mozvisibilitychange',
                               this.onVisibilityChange.bind(this));
@@ -253,7 +252,7 @@ var MessageManager = {
   },
 
   getThreads: function mm_getThreads(callback, extraArg) {
-    var request = this._mozSms.getThreadList();
+    var request = this._mozMobileMessage.getThreadList();
     request.onsuccess = function onsuccess(evt) {
       var threads = evt.target.result;
       if (callback) {
@@ -273,7 +272,7 @@ var MessageManager = {
         endCB = options.endCB,   // CB when all messages retrieved
         endCBArgs = options.endCBArgs; //Args for endCB
     var self = this;
-    var request = this._mozSms.getMessages(filter, !invert);
+    var request = this._mozMobileMessage.getMessages(filter, !invert);
     request.onsuccess = function onsuccess() {
       var cursor = request.result;
       if (cursor.message) {
@@ -296,147 +295,13 @@ var MessageManager = {
       console.log(msg);
     };
   },
-  createMmsMessage: function mm_createMmsMessage(number, slideArray) {
-    var msg;
-    var attachments = [];
-    var header = '<head><layout>' +
-                 '<root-layout width="320px" height="480px"/>' +
-                 '<region id="Image" left="0px" top="0px"' +
-                 ' width="320px" height="320px" fit="meet"/>' +
-                 '<region id="Text" left="0px" top="320px"' +
-                 ' width="320px" height="160px" fit="meet"/>' +
-                 '</layout></head>';
-    var body = '<body>';
-    for (var i = 0; i < slideArray.length; i++) {
-      // Set slide duration to 5 sec if the media is image.
-      var type = slideArray[i].blob.type.split('/')[0];
-      if (type === 'image')
-        type = 'img';
-      var par = '<par' + (type === 'img' ? ' dur="5000ms">' : '>');
-      // Wrap media and text data into mms attachment.
-      // Set multimedia region.
-      var media = '<' + type + ' src="' + slideArray[i].name +
-                  '" region="Image"/>';
-      attachments.push({
-        id: '<' + slideArray[i].name + '>',
-        location: slideArray[i].name,
-        content: slideArray[i].blob
-      });
-      var text = '';
-      if (slideArray[i].text) {
-        // Set text region.
-        var src = 'text_' + i + '.txt';
-        text = '<text src="' + src + '" region="Text"/>';
-        attachments.push({
-          id: '<text_' + i + '>',
-          location: src,
-          content: new Blob([slideArray[i].text], {type: 'text/plain'})
-        });
-      }
-      par += (media + text + '</par>');
-      body += par;
-    }
-    body += '</body>';
-    var smilString = '<smil>' + header + body + '</smil>';
-    return {
-      smil: smilString,
-      attachments: attachments
-    };
-  },
-  extractMmsMessage: function mm_extractMmsMessage(msg, callback) {
-    var smil = msg.smil;
-    var attachments = msg.attachments;
-    var slideArray = [];
-    // Handle mm without smil document: If the attachments contain more than
-    // one text resource, we will aggregate all text into the last slide.
-    if (!smil) {
-      var textDataArray = [];
-      var textJoinChecking = function() {
-        for (var key in textDataArray) {
-          if (typeof textDataArray[key] !== 'string')
-            return;
-        }
-        var text = textDataArray.join(' ');
-        slideArray[slideArray.length - 1].text = text;
-        callback(slideArray);
-      };
-      for (var i = 0; i < attachments.length; i++) {
-        var blob = attachments[i].content;
-        var type = blob.type.split('/')[0];
-        if (type === 'text') {
-          textDataArray.push(function(index, textblob) {
-            var textReader = new FileReader();
-            textReader.onload = function(evt) {
-              textDataArray[index] = evt.target.result;
-              textJoinChecking();
-            };
-            textReader.readAsText(textblob);
-          }(textDataArray.length, blob));
-        } else {
-          slideArray.push({
-            name: attachments[i].location,
-            blob: blob,
-            text: ''
-          });
-        }
-      }
-      // If the attachment contains no text data, return the slides directly;
-      if (textDataArray.length === 0) {
-        callback(slideArray);
-      }
-    } else {
-      var doc = (new DOMParser()).parseFromString(smil, 'application/xml');
-      var slides = doc.documentElement.getElementsByTagName('par');
-      var resourceMapping = function(name) {
-        var blob = null;
-        for (var i = 0; i < attachments.length; i++) {
-          // Some src path might contain cid prefix. Remove prefix for
-          // matching the blob source.
-          if (name.indexOf('cid:') === 0) {
-            name = name.substring(4);
-          }
-          if (attachments[i].location === name) {
-            blob = attachments[i].content;
-            break;
-          }
-        }
-        return blob;
-      };
-      var textBlobChecking = function() {
-        for (var key in slideArray) {
-          if (typeof slideArray[key].text !== 'string')
-            return;
-        }
-        callback(slideArray);
-      };
-      for (var i = 0; i < slides.length; i++) {
-        var slide = slides[i];
-        var mediaElement = slide.querySelector('img, video, audio');
-        var textElement = slide.querySelector('text');
-        var mediaSrc = mediaElement.getAttribute('src');
-        var textSrc = textElement ? textElement.getAttribute('src') : null;
-        slideArray.push({
-          name: mediaSrc,
-          blob: resourceMapping(mediaSrc),
-          text: textSrc ? function(index, textblob) {
-            var textReader = new FileReader();
-            textReader.onload = function(evt) {
-              slideArray[index].text = evt.target.result;
-              textBlobChecking();
-            };
-            textReader.readAsText(textblob);
-          }(i, resourceMapping(textSrc)) : ''
-        });
-      }
-    }
-  },
   send: function mm_send(number, msgContent, callback, errorHandler) {
     var req;
     if (typeof msgContent === 'string') { // send SMS
-      req = this._mozSms.send(number, msgContent);
+      req = this._mozMobileMessage.send(number, msgContent);
     } else if (Array.isArray(msgContent)) { // send MMS
-      var msg = this.createMmsMessage(number, msgContent);
-      req = navigator.mozMobileMessage.sendMMS({
+      var msg = SMIL.generate(msgContent);
+      req = navigator._mozMobileMessage.sendMMS({
         receivers: [number],
         subject: '',
         smil: msg.smil,
@@ -453,7 +318,7 @@ var MessageManager = {
   },
 
   deleteMessage: function mm_deleteMessage(id, callback) {
-    var req = this._mozSms.delete(id);
+    var req = this._mozMobileMessage.delete(id);
     req.onsuccess = function onsuccess() {
       callback && callback(req.result);
     };
@@ -481,7 +346,7 @@ var MessageManager = {
   },
 
   markMessagesRead: function mm_markMessagesRead(list, value, callback) {
-    if (!navigator.mozSms || !list.length) {
+    if (!navigator.mozMobileMessage || !list.length) {
       return;
     }
 
@@ -489,7 +354,7 @@ var MessageManager = {
     // 'markMessageRead' until a previous call is completed. This way any
     // other potential call to the API, like the one for getting a message
     // list, could be done within the calls to mark the messages as read.
-    var req = this._mozSms.markMessageRead(list.pop(), value);
+    var req = this._mozMobileMessage.markMessageRead(list.pop(), value);
     req.onsuccess = (function onsuccess() {
       if (!list.length && callback) {
         callback(req.result);

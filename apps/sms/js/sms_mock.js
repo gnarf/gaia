@@ -5,7 +5,7 @@
 *********************************************************** */
 (function(window) {
 
-  var MockNavigatormozSms = window.MockNavigatormozSms = {};
+  var MockNavigatormozMobileMessage = window.MockNavigatormozMobileMessage = {};
 
   // Fake in-memory message database
   var messagesDb = {
@@ -160,15 +160,16 @@
   };
 
   // mozSms API
-  MockNavigatormozSms.addEventListener = function(eventName, handler) {
-    var handlers = allHandlers[eventName];
-    if (!handlers) {
-      handlers = allHandlers[eventName] = [];
-    }
-    handlers.push(handler);
-  };
+  MockNavigatormozMobileMessage.addEventListener =
+    function(eventName, handler) {
+      var handlers = allHandlers[eventName];
+      if (!handlers) {
+        handlers = allHandlers[eventName] = [];
+      }
+      handlers.push(handler);
+    };
 
-  MockNavigatormozSms.send = function(number, text, success, error) {
+  MockNavigatormozMobileMessage.send = function(number, text, success, error) {
     var sendId = messagesDb.id++;
     var request = {
       error: null
@@ -243,7 +244,7 @@
   //  - error: Error information, if any (null otherwise)
   //  - onerror: Function that may be set by the suer. If set, will be invoked
   //    in the event of a failure
-  MockNavigatormozSms.getThreadList = function() {
+  MockNavigatormozMobileMessage.getThreadList = function() {
     var request = {
       error: null
     };
@@ -285,7 +286,7 @@
   //    invoked in the event of a success
   //  - onerror: Function that may be set by the suer. If set, will be invoked
   //    in the event of a failure
-  MockNavigatormozSms.getMessages = function(filter, reverse) {
+  MockNavigatormozMobileMessage.getMessages = function(filter, reverse) {
     var request = {
       error: null
     };
@@ -356,7 +357,7 @@
   //    invoked in the event of a success
   //  - onerror: Function that may be set by the suer. If set, will be invoked
   //    in the event of a failure
-  MockNavigatormozSms.delete = function(id) {
+  MockNavigatormozMobileMessage.delete = function(id) {
     var request = {
       error: null
     };
