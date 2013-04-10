@@ -301,7 +301,7 @@ var MessageManager = {
       req = this._mozMobileMessage.send(number, msgContent);
     } else if (Array.isArray(msgContent)) { // send MMS
       var msg = SMIL.generate(msgContent);
-      req = navigator._mozMobileMessage.sendMMS({
+      req = this._mozMobileMessage.sendMMS({
         receivers: [number],
         subject: '',
         smil: msg.smil,
