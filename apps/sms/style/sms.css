@@ -398,6 +398,9 @@ section[role="region"].new > header:first-child form {
   display: block;
 }
 
+#messages-container video, #messages-container audio {
+  max-width: 100%;
+}
 /*
   Styles for Edit mode in Messages Container
 */

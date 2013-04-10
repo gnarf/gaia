@@ -492,8 +492,16 @@ var ThreadUI = {
       var mediaString = '';
       var textString = '';
       if (dataArray[i].name && dataArray[i].blob) {
-        mediaString = '<img src="' + URL.createObjectURL(dataArray[i].blob) +
-                      '"/>';
+        var mediaType = dataArray[i].blob.type.split('/')[0];
+        var mediaURL = URL.createObjectURL(dataArray[i].blob);
+        if (mediaType === 'image') {
+          mediaString = '<img src="' +
+              URL.createObjectURL(dataArray[i].blob) + '"><br>';
+        } else {
+          mediaString = '<' + mediaType + ' controls><source src="' +
+            mediaURL + '" type="' + dataArray[i].blob.type +
+            '"></' + mediaType + '><br>';
+        }
       }
       if (dataArray[i].text) {
         textString =
