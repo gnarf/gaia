@@ -79,7 +79,13 @@
         }
         if (activity && MozActivity) {
           try {
-            new MozActivity(activity);
+            var activity = new MozActivity(activity);
+            activity.onsuccess = function lan_activitySuccess() {
+              LinkActionHandler.resetActivityInProgress();
+            };
+            activity.onerror = function lan_activityFailure() {
+              LinkActionHandler.resetActivityInProgress();
+            };
           }
           catch (e) {
             console.log('WebActivities unavailable? : ' + e);

@@ -162,15 +162,8 @@ var MessageManager = {
     var threadMessages = document.getElementById('thread-messages');
     switch (window.location.hash) {
       case '#new':
-        var input = document.getElementById('messages-input');
-        var receiverInput = document.getElementById('messages-recipient');
-        //Keep the  visible button the :last-child
-        var contactButton = document.getElementById(
-            'messages-contact-pick-button'
-        );
-        contactButton.parentNode.appendChild(contactButton);
-        document.getElementById('messages-container').innerHTML = '';
-        ThreadUI.cleanFields();
+        
+        ThreadUI.cleanFields(true);
         // If the message has a body, use it to popuplate the input field.
         if (MessageManager.activityBody) {
           input.value = MessageManager.activityBody;
@@ -181,7 +174,7 @@ var MessageManager = {
         MessageManager.currentThread = null;
         threadMessages.classList.add('new');
         MessageManager.slide(function() {
-          receiverInput.focus();
+          ThreadUI.createEditableRecipient();
         });
         break;
       case '#thread-list':

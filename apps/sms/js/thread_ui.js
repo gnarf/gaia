@@ -10,7 +10,7 @@ var ThreadUI = {
 
   init: function thui_init() {
     var _ = navigator.mozL10n.get;
-
+    // Fields with 'messages' label
     [
       'container',
       'header-text', 'recipient', 'input', 'compose-form',
@@ -21,12 +21,25 @@ var ThreadUI = {
     ].forEach(function(id) {
       this[Utils.camelCase(id)] = document.getElementById('messages-' + id);
     }, this);
+    // Other DOM elements
+    ['to-field', 'recipients', 'thread-messages'].forEach(function(id) {
+      this[Utils.camelCase(id)] = document.getElementById(id);
+    }, this);
 
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozSms` API
     this._mozSms = navigator.mozSms || window.DesktopMockNavigatormozSms;
 
-    // Prevent sendbutton to hide the keyboard:
+    // If you are typing outside the to-field when there is no input, we have to
+    // update consequently
+    this.threadMessages.addEventListener(
+      'click', this.genericTap.bind(this)
+    );
+    // Handler of the 'to-field'
+    this.toField.addEventListener(
+      'click', this.recipientsContainerHandler.bind(this)
+    );
+
     this.sendButton.addEventListener(
       'mousedown', function mouseDown(event) {
         event.preventDefault();
@@ -58,10 +71,6 @@ var ThreadUI = {
       'click', this.back.bind(this)
     );
 
-    this.contactPickButton.addEventListener(
-      'click', this.pick.bind(this)
-    );
-
     this.checkAllButton.addEventListener(
       'click', this.toggleCheckedAll.bind(this, true)
     );
@@ -81,21 +90,21 @@ var ThreadUI = {
     this.headerText.addEventListener(
       'click', this.activateContact.bind(this)
     );
-
-    this.clearButton.addEventListener(
-      'click', this.clear.bind(this)
-    );
-
+    // When 'focus' we have to remove 'edit-mode' in the recipient
     this.input.addEventListener(
-      'input', function() {
+      'focus', function inputFocusHandler() {
+        // If focus we have to create the 'box'
+        // in 'To' field if there is one in 'edit' mode
+        var recipient =
+          ThreadUI.recipients.querySelector('span[contenteditable=true]');
+        if (recipient) {
+          ThreadUI.createRecipientBox(recipient);
+        }
+      });
+    // In case of input, we have to resize the input following UX Specs.
+    this.input.addEventListener(
+      'input', function inputTypingHandler() {
         this.updateInputHeight();
-        this.enableSend();
-      }.bind(this)
-    );
-
-    this.recipient.addEventListener(
-      'input', function() {
-        this.searchContact();
         this.enableSend();
       }.bind(this)
     );
@@ -110,11 +119,12 @@ var ThreadUI = {
     this.editForm.addEventListener(
       'submit', this
     );
-    this.telForm.addEventListener(
-      'submit', this
-    );
     this.composeForm.addEventListener(
       'submit', this
+    );
+    // For picking a contact from Contacts
+    this.contactPickButton.addEventListener(
+      'mousedown', this.addRecipientFromContacts.bind(this)
     );
 
     this.tmpl = ['contact', 'highlight'].reduce(function(tmpls, name) {
@@ -128,7 +138,7 @@ var ThreadUI = {
     this.previousHash = null;
   },
 
-  initSentAudio: function() {
+  initSentAudio: function thui_initSentAudio() {
     if (this.sentAudio)
       return;
 
@@ -150,6 +160,169 @@ var ThreadUI = {
       }).bind(this));
     }
   },
+  // Methods for updating the new layout of the composer
+  recipientsContainerHandler: function thui_recipientHandler(event) {
+    // If it's not a recipient retrieved from contacts
+    if (event.target.tagName !== 'SPAN') {
+      // TODO Change this for multirecipient. In basic layout we only are going
+      // to have the possibility of appending ONE recipient
+      var recipients = ThreadUI.recipients.getElementsByTagName('span');
+      if (recipients.length === 0) {
+        ThreadUI.createEditableRecipient();
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return;
+    }
+  },
+  // Pick a contact from Contacts App
+  addRecipientFromContacts: function thui_addRecipientFromContacts() {
+    var self = this;
+    ThreadUI.pick(function onsuccess(contact) {
+        // TODO Remove in multirecipient because there is no
+        // need to remove, only append
+        self.recipients.textContent = '';
+        // Create the box
+        var recipient = ThreadUI.createEditableRecipient(contact);
+        self.createRecipientBox(recipient);
+        self.enableSend();
+
+      },function onerror() {
+        console.log('ERROR Retrieving a contact from Contacts');
+        // TODO Check if needed
+      });
+  },
+  // Updating the input-box if there is a generic tap
+  genericTap: function thui_genericTap() {
+    var recipient =
+      this.recipients.querySelector('span[contenteditable=true]');
+    if (recipient && recipient.textContent.length === 0) {
+      recipient.parentNode.removeChild(recipient);
+      this.updateComposerHeader();
+    }
+  },
+  // Method for updating the header when needed
+  updateComposerHeader: function thui_updateComposerHeader() {
+    var recipientNumber = document.getElementsByClassName('recipient').length;
+    if (recipientNumber > 0) {
+      this.contactPickButton.classList.add('disabled');
+      this.headerText.textContent =
+        navigator.mozL10n.get('recipient', {n: recipientNumber});
+    } else {
+      this.contactPickButton.classList.remove('disabled');
+      this.headerText.textContent = navigator.mozL10n.get('newMessage');
+    }
+  },
+  // Create a recipient box non-editable
+  createRecipientBox: function thui_createRecipientBox(recipient) {
+    if (!recipient) {
+      console.log('There is no recipient');
+      return;
+    }
+    // IF the box is
+    if (recipient.textContent.length === 0 ||
+        recipient.textContent === ';') {
+      this.removeRecipient(recipient);
+      return;
+    }
+    this.updateComposerHeader();
+    recipient.textContent = recipient.textContent.replace(';', '');
+    recipient.setAttribute('contenteditable', false);
+    // Add dataset
+    recipient.dataset.phoneNumber = recipient.textContent;
+    // Move the focus to the input
+    ThreadUI.input.focus();
+    ThreadUI.enableSend();
+    // Closing from live search
+    ThreadUI.container.textContent = '';
+  },
+  // Clean recipients container
+  cleanRecipients: function thui_cleanRecipients() {
+    this.recipients.textContent = '';
+  },
+  // Remove a recipient from the 'to-field'
+  removeRecipient: function thui_removeRecipient(recipient) {
+    recipient.parentNode.removeChild(recipient);
+    this.updateComposerHeader();
+    this.enableSend();
+  },
+  // Set a recipient to editable if possible
+  editRecipientBox: function thui_editRecipientBox(recipient) {
+    recipient.setAttribute('contenteditable', true);
+    recipient.focus();
+  },
+  // Method which creates an editable recipient box
+  createEditableRecipient: function thui_createEditableRecipient(contact) {
+    // Create DOM Element
+    var newRecipient = document.createElement('span');
+    // Add styles
+    newRecipient.classList.add('recipient');
+    // Append to 'recipients' container
+    document.getElementById('recipients').appendChild(newRecipient);
+    // If it's a contact
+    if (contact) {
+      // Update the name and adding the right info
+      newRecipient.textContent = contact.name;
+      newRecipient.dataset.contactId = contact.id;
+    } else {
+      // If it's not a contact it's an editable one
+      newRecipient.setAttribute('contenteditable', true);
+      // Focus in the created recipient
+      newRecipient.focus();
+      // Adding listener to identify some events if it's editable
+      newRecipient.addEventListener('input', function checkInput(e) {
+        var recipient = e.target;
+        // Is there any semicolon?
+        var semicolonFound =
+          recipient.textContent.indexOf(';') !== -1 ? true : false;
+        if (semicolonFound) {
+          // Close the box
+          ThreadUI.createRecipientBox(recipient);
+          return;
+        }
+        // TODO Remove this condition in multi-recipient
+        if (recipient.textContent.length === 0) {
+          ThreadUI.contactPickButton.classList.remove('disabled');
+        } else {
+          ThreadUI.contactPickButton.classList.add('disabled');
+        }
+
+        // If it's not a ';' we are going to launch the live search
+        ThreadUI.searchContact(recipient);
+      });
+      // We have to identify as well an 'Enter' action
+      newRecipient.addEventListener('keydown', function(e) {
+        if (e.keyCode == 13) {
+          // Close the box
+          ThreadUI.createRecipientBox(e.target);
+          // Stop propagation
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      });
+    }
+    // Tap actions on the recipient
+    newRecipient.addEventListener('click', function(e) {
+      var recipient = e.target;
+      // If it's not a contact we go to edit mode
+      if (!recipient.dataset.contactId) {
+        ThreadUI.editRecipientBox(e.target);
+        e.stopPropagation();
+        e.preventDefault();
+        return;
+      }
+      var confirmMessage =
+        navigator.mozL10n.get('recipientRemoval',
+          {recipient: recipient.textContent});
+      // If it's a contact we should ask to remove
+      if (confirm(confirmMessage)) {
+        ThreadUI.removeRecipient(recipient);
+      }
+
+    });
+    return newRecipient;
+  },
+
   // We define an edge for showing the following chunk of elements
   manageScroll: function thui_manageScroll(oEvent) {
     // kEdge will be the limit (in pixels) for showing the next chunk
@@ -174,12 +347,16 @@ var ThreadUI = {
     var barHeight =
       document.getElementById('messages-compose-form').offsetHeight / fontSize;
     var adjustment = barHeight - inputHeight;
+    if (window.location.hash === '#new') {
+      adjustment += 5.7;
+    }
     this.input.style.maxHeight = (viewHeight - adjustment) + 'rem';
+    console.log(this.input.style.maxHeight);
   },
   back: function thui_back() {
     var goBack = function() {
       ThreadUI.stopRendering();
-      if (ThreadUI.input.value.length == 0) {
+      if (ThreadUI.input.value.length === 0) {
         window.location.hash = '#thread-list';
         return;
       }
@@ -213,7 +390,8 @@ var ThreadUI = {
     if (this.input.value.length) {
       this.updateCounter();
     }
-    if (window.location.hash == '#new' && !this.recipient.value.length) {
+    var recipients = document.getElementsByClassName('recipient');
+    if (window.location.hash == '#new' && !recipients.length) {
       this.sendButton.disabled = true;
       return;
     }
@@ -760,11 +938,10 @@ var ThreadUI = {
     switch (evt.type) {
       case 'click':
         if (window.location.hash !== '#edit') {
-           // Handle events on links in a message
-           LinkActionHandler.handleTapEvent(evt);
+            // Handle events on links in a message
+            LinkActionHandler.handleTapEvent(evt);
           return;
         }
-
         var input = evt.target.parentNode.querySelector('input');
         if (input) {
           ThreadUI.chooseMessage(input);
@@ -786,8 +963,12 @@ var ThreadUI = {
       self.input.value = '';
       self.sendButton.disabled = true;
       self.sendButton.dataset.counter = '';
-      self.recipient.value = '';
       self.updateInputHeight();
+      if (window.location.hash === '#new') {
+        self.cleanRecipients();
+        self.updateComposerHeader();
+      }
+
     };
 
     if (this.previousHash === window.location.hash ||
@@ -815,7 +996,10 @@ var ThreadUI = {
       var hash = window.location.hash;
       // Depending where we are, we get different num
       if (hash == '#new') {
-        num = this.recipient.value;
+        var recipient =
+          this.recipients.querySelector('span[contenteditable=false]');
+
+        num = recipient.dataset.phoneNumber;
         if (!num) {
           return;
         }
@@ -939,7 +1123,7 @@ var ThreadUI = {
 
   // Returns true when a contact has been rendered
   // Returns false when no contact has been rendered
-  renderContact: function thui_renderContact(contact) {
+  renderContact: function thui_renderContact(contact, value, contactsUl) {
     // Contact records that don't have phone numbers
     // cannot be sent SMS or MMS messages
     // TODO: Add email checking support for MMS
@@ -947,7 +1131,8 @@ var ThreadUI = {
       return false;
     }
 
-    var input = this.recipient.value.trim();
+    var input = value.trim();
+
     var escaped = Utils.escapeRegex(input);
     var escsubs = escaped.split(/\s+/);
     var tels = contact.tel;
@@ -957,8 +1142,6 @@ var ThreadUI = {
       number: new RegExp(escaped, 'ig')
     };
 
-    var contactsUl = document.createElement('ul');
-    contactsUl.classList.add('contactList');
 
     for (var i = 0; i < tels.length; i++) {
       var current = tels[i];
@@ -967,6 +1150,7 @@ var ThreadUI = {
       Utils.getPhoneDetails(number, contact, function(details) {
         var contactLi = document.createElement('li');
         var data = {
+          contactId: current.id,
           name: Utils.escapeHTML(name || details.title),
           number: Utils.escapeHTML(number),
           type: current.type || '',
@@ -997,13 +1181,14 @@ var ThreadUI = {
       }.bind(this));
     }
 
-    ThreadUI.container.appendChild(contactsUl);
+
 
     return true;
+
   },
 
-  searchContact: function thui_searchContact() {
-    var filterValue = this.recipient.value;
+  searchContact: function thui_searchContact(recipient) {
+    var filterValue = recipient.textContent;
 
     if (!filterValue.trim()) {
       // In cases where searchContact was invoked for "input"
@@ -1018,11 +1203,31 @@ var ThreadUI = {
     Contacts.findByString(filterValue, function gotContact(contacts) {
       // There are contacts that match the input.
       this.container.innerHTML = '';
-      contacts.forEach(this.renderContact, this);
+      var contactsUl = document.createElement('ul');
+      contactsUl.addEventListener('click', function(e) {
+        var phoneNumber = e.target.dataset.phoneNumber;
+        var name = e.target.dataset.name;
+        var contactId = e.target.dataset.contactId;
+        var contact = {
+          'name': name,
+          'contactId': contactId
+        };
+        var recipient =
+          ThreadUI.recipients.querySelector('span[contenteditable=true]');
+        recipient.parentNode.removeChild(recipient);
+        var newRecipient = ThreadUI.createEditableRecipient(contact);
+        ThreadUI.createRecipientBox(newRecipient);
+        e.stopPropagation();
+      });
+      contactsUl.classList.add('contactList');
+      ThreadUI.container.appendChild(contactsUl);
+      contacts.forEach(function(contact) {
+        ThreadUI.renderContact(contact, filterValue, contactsUl);
+      });
     }.bind(this));
   },
 
-  pick: function thui_pick() {
+  pick: function thui_pick(successHandler, errorHandler) {
     try {
       var activity = new MozActivity({
         name: 'pick',
@@ -1031,13 +1236,15 @@ var ThreadUI = {
         }
       });
       activity.onsuccess = function success() {
-        var number = this.result.number;
-        if (number) {
-          window.location.hash = '#num=' + number;
+        if (successHandler && typeof successHandler === 'function') {
+          successHandler(this.result);
         }
       };
     } catch (e) {
       console.log('WebActivities unavailable? : ' + e);
+      if (errorHandler && typeof errorHandler === 'function') {
+        errorHandler();
+      }
     }
   },
 

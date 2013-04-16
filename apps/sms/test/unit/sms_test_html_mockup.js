@@ -54,13 +54,13 @@ function renderThreadMsgHeader() {
           '<h1 id="messages-header-text" ' +
             'data-l10n-id="messages" aria-hidden="true">' +
             'Messages</h1>' +
-          '<form id="messages-tel-form">' +
-            '<input id="messages-recipient" type="text" ' +
-              'name="tel" class="tel" />' +
-            '<span id="messages-clear-button" ' +
-              'role="button" class="icon icon-clear">' +
-              '</span>' +
-          '</form>';
+          '<section id="to-field">' +
+            '<section id="to-label">' +
+              'To:' +
+            '</section>' +
+            '<section id="recipients">' +
+            '</section>' +
+          '</section>';
 }
 
 function renderThreadMsgEdit() {
