@@ -221,7 +221,7 @@
   };
 
   messagesDb.threads.push({
-    senderOrReceiver: '052780',
+    participants: ['052780'],
     subject: 'Test MMS message',
     type: 'mms',
     timestamp: new Date(),
