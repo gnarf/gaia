@@ -339,6 +339,17 @@ suite('Utils.Template', function() {
       assert.equal(Utils.Template(window), '');
       assert.equal(Utils.Template(document.createComment('')), '');
     });
+    test('extract("non-existing-id")', function() {
+      assert.equal(Utils.Template('non-existing-id'), '');
+    });
+    test('extract("existing-id")', function() {
+      var domElement = document.createElement('div');
+      domElement.id = 'existing-id';
+      domElement.appendChild(document.createComment('testing'));
+      document.body.appendChild(domElement);
+      assert.equal(Utils.Template('existing-id').toString(), 'testing');
+      document.body.removeChild(domElement);
+    });
   });
 
   suite('interpolate', function() {

@@ -234,13 +234,13 @@
   var priv = new WeakMap();
 
   function extract(node) {
-    if (!node) {
-      return '';
-    }
-
     // Received an ID string? Find the appropriate node to continue
     if (typeof node === 'string') {
       node = document.getElementById(node);
+    }
+
+    if (!node) {
+      return '';
     }
 
     // No firstChild means no comment node.
