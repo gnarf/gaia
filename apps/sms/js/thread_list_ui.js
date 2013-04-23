@@ -53,6 +53,8 @@ var ThreadListUI = {
     this.editForm.addEventListener(
       'submit', this
     );
+
+    this.threadTmpl = Utils.Template('messages-thread-list-tmpl');
   },
 
   updateThreadWithContact:
@@ -260,36 +262,23 @@ var ThreadListUI = {
 
   createThread: function thlui_createThread(thread) {
     // Create DOM element
-    var num = thread.participants[0];
-    var timestamp = thread.timestamp.getTime();
     var threadDOM = document.createElement('li');
+    var timestamp = thread.timestamp.getTime();
+
     threadDOM.id = 'thread_' + thread.id;
     threadDOM.dataset.time = timestamp;
-    threadDOM.dataset.phoneNumber = num;
+    threadDOM.dataset.phoneNumber = thread.participants[0];
 
     // Retrieving params from thread
-    var bodyText = (thread.body || '').split('\n')[0];
-    var bodyHTML = Utils.Message.format(bodyText);
     var formattedDate = Utils.getFormattedHour(timestamp);
-    // Create HTML Structure
-    var structureHTML = '<label class="danger">' +
-                          '<input type="checkbox" value="' + num + '">' +
-                          '<span></span>' +
-                        '</label>' +
-                        '<a href="#num=' + num +
-                          '" class="' +
-                          (thread.unreadCount > 0 ? 'unread' : '') + '">' +
-                          '<aside class="icon icon-unread">unread</aside>' +
-                          '<aside class="pack-end">' +
-                            '<img src="">' +
-                          '</aside>' +
-                          '<p class="name">' + num + '</p>' +
-                          '<p><time>' + formattedDate +
-                          '</time>' + bodyHTML + '</p>' +
-                        '</a>';
 
     // Update HTML
-    threadDOM.innerHTML = structureHTML;
+    threadDOM.innerHTML = this.threadTmpl.interpolate({
+      number: thread.participants[0],
+      formattedDate: Utils.getFormattedHour(timestamp),
+      body: (thread.body || '').split('\n')[0],
+      linkClass: thread.unreadCount > 0 ? 'unread' : ''
+    });
 
     return threadDOM;
   },
