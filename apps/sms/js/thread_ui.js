@@ -516,7 +516,8 @@ var ThreadUI = {
       }
       if (attachment.text) {
         textElement = document.createElement('span');
-        textElement.innerHTML = LinkHelper.searchAndLinkClickableData(attachment.text);
+        textElement.innerHTML =
+          LinkHelper.searchAndLinkClickableData(attachment.text);
         container.appendChild(textElement);
       }
     });
@@ -580,6 +581,7 @@ var ThreadUI = {
     var id = message.id;
     var bodyText = Utils.Message.format(message.body);
     var delivery = message.delivery;
+    var deliveryStatus = message.deliveryStatus;
     var messageDOM = document.createElement('li');
 
     messageDOM.classList.add('bubble');
@@ -591,16 +593,13 @@ var ThreadUI = {
     var inputValue = id;
     var asideHTML = '';
     // Do we have to add some error/sending icon?
-    if (delivery) {
-      switch (delivery) {
-        case 'error':
-          asideHTML = '<aside class="pack-end"></aside>';
-          break;
-        case 'sending':
-          asideHTML = '<aside class="pack-end">' +
-                      '<progress></progress></aside>';
-          break;
-      }
+    console.log(delivery, message.deliveryStatus);
+    if (delivery === 'error' ||
+        delivery === 'not-downloaded' && deliveryStatus[0] === 'error') {
+      asideHTML = '<aside class="pack-end"></aside>';
+    } else if (delivery === 'sending' || deliveryStatus[0] === 'pending') {
+      asideHTML = '<aside class="pack-end">' +
+                  '<progress></progress></aside>';
     }
     // Create HTML content
     var messageHTML = '<label class="danger">' +
@@ -611,6 +610,7 @@ var ThreadUI = {
     messageHTML += asideHTML;
     messageHTML += '<p></p></a>';
     messageDOM.innerHTML = messageHTML;
+
     if (delivery === 'error') {
       ThreadUI.addResendHandler(message, messageDOM);
     }
@@ -620,7 +620,7 @@ var ThreadUI = {
     var pElement = messageDOM.querySelector('p');
     if (message.type && message.type === 'mms') { // MMS
       if (message.delivery === 'not-downloaded') {
-        // TODO: We need to handle the mms message with "not-downloaded" status
+        bodyHTML = Utils.escapeHTML(message.subject);
       } else {
         pElement.classList.add('mms-bubble-content');
         SMIL.parse(message, function(slideArray) {
@@ -1144,8 +1144,6 @@ var ThreadUI = {
     }
   }
 };
-
-window.confirm = window.confirm; // allow override in unit tests
 
 window.addEventListener('resize', function resize() {
   ThreadUI.setInputMaxHeight();

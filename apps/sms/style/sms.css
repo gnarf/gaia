@@ -348,6 +348,7 @@ section[role="region"].new > header:first-child form {
   top: 1rem;
 }
 
+#messages-container[data-type="list"] li.bubble .not-downloaded p,
 #messages-container[data-type="list"] li.bubble .received p {
   float: left;
   background: #FBEAE0;
@@ -356,12 +357,12 @@ section[role="region"].new > header:first-child form {
   float: left;
 }
 
+#messages-container[data-type="list"] li.bubble .not-downloaded p:after,
 #messages-container[data-type="list"] li.bubble .received p:after {
   background-position: 0 0;
   left: -1.1rem;
   margin-top: 0;
 }
-
 #messages-container[data-type="list"] li.bubble .sending p {
   border: 0.2rem solid #5f5f5f;
   color: #5f5f5f;
@@ -420,7 +421,7 @@ section[role="region"].new > header:first-child form {
 .edit #messages-container[data-type="list"] li p {
   transform: translateX(0);
 }
-
+.edit #messages-container[data-type="list"] li .not-downloaded p, 
 .edit #messages-container[data-type="list"] li .received p {
   transform: translateX(4rem);
   transition: all 0.3s ease 0s;
@@ -434,6 +435,7 @@ section[role="region"].new > header:first-child form {
   background-position: -4.4rem 0;
 }
 
+.edit #messages-container[data-type="list"] li.selected .not-downloaded p:after,
 .edit #messages-container[data-type="list"] li.selected .received p:after {
   background-position: -1.1rem 0;
 }
