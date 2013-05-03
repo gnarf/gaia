@@ -34,6 +34,9 @@ var ThreadUI = global.ThreadUI = {
   recipients: [],
   init: function thui_init() {
     var _ = navigator.mozL10n.get;
+
+    Compose.init('messages-compose-form');
+
     // Fields with 'messages' label
     [
       'container', 'to-field', 'recipients-container',
@@ -46,6 +49,7 @@ var ThreadUI = global.ThreadUI = {
     ].forEach(function(id) {
       this[Utils.camelCase(id)] = document.getElementById('messages-' + id);
     }, this);
+
 
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozMobileMessage` API
@@ -500,7 +504,7 @@ var ThreadUI = global.ThreadUI = {
     var buttonHeight = 30;
 
     // Retrieve elements useful in growing method
-    var bottomBar = document.getElementById('messages-compose-form');
+    var bottomBar = this.composeForm;
 
     // Updating the height if scroll is bigger that height
     // This is when we have reached the header (UX requirement)

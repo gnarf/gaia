@@ -4,6 +4,7 @@
 // mocha and when we have that new mocha in test agent
 mocha.setup({ globals: ['alert'] });
 
+requireApp('sms/test/unit/mock_alert.js');
 requireApp('sms/test/unit/mock_l10n.js');
 requireApp('sms/js/utils.js');
 requireApp('sms/test/unit/mock_utils.js');
@@ -75,10 +76,18 @@ suite('thread_ui.js >', function() {
     mocksHelper.setup();
     loadBodyHTML('/index.html');
 
+<<<<<<< HEAD
     sendButton = document.getElementById('messages-send-button');
     input = document.getElementById('messages-input');
     composeForm = document.getElementById('messages-compose-form');
     recipient = document.getElementById('messages-recipient');
+=======
+    loadBodyHTML('/index.html');
+    
+    container =  document.querySelector("#thread-messages");
+    sendButton = container.querySelector('#messages-send-button');
+    input = container.querySelector('#messages-input');
+>>>>>>> 840069
 
     ThreadUI.init();
     realMozMobileMessage = ThreadUI._mozMobileMessage;
@@ -104,7 +113,7 @@ suite('thread_ui.js >', function() {
     });
 
     test('button should be enabled when there is some text', function() {
-      input.value = 'Hola';
+      Compose.append('hola');
       ThreadUI.enableSend();
       assert.isFalse(sendButton.disabled);
     });
@@ -140,7 +149,7 @@ suite('thread_ui.js >', function() {
       });
 
       test('button should be disabled when there is no contact', function() {
-        input.value = 'Hola';
+        Compose.append('hola');
         ThreadUI.enableSend();
         assert.isTrue(sendButton.disabled);
       });
@@ -148,7 +157,7 @@ suite('thread_ui.js >', function() {
       test('button should be enabled when there is both contact and input',
         function() {
 
-        ThreadUI.input.value = 'Hola';
+        Compose.append('hola');
         var recipient = ThreadUI.appendEditableRecipient();
         ThreadUI.createRecipient(recipient);
         ThreadUI.enableSend();
@@ -230,6 +239,7 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, '');
       });
 
+<<<<<<< HEAD
       test('the user can enter more characters', function() {
         assert.equal(input.maxLength, -1);
       });
@@ -240,6 +250,10 @@ suite('thread_ui.js >', function() {
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
+=======
+      test('no alert is sent', function() {
+        assert.isNull(Mockalert.mLastMessage);
+>>>>>>> 840069
       });
     });
 
@@ -267,6 +281,7 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
+<<<<<<< HEAD
       test('the user can enter more characters', function() {
         assert.equal(input.maxLength, -1);
       });
@@ -277,6 +292,10 @@ suite('thread_ui.js >', function() {
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
+=======
+      test('no alert is sent', function() {
+        assert.isNull(Mockalert.mLastMessage);
+>>>>>>> 840069
       });
     });
 
@@ -304,6 +323,7 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
+<<<<<<< HEAD
       test('the user can enter more characters', function() {
         assert.equal(input.maxLength, -1);
       });
@@ -314,6 +334,10 @@ suite('thread_ui.js >', function() {
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
+=======
+      test('no alert is sent', function() {
+        assert.isNull(Mockalert.mLastMessage);
+>>>>>>> 840069
       });
     });
 
@@ -341,6 +365,7 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
+<<<<<<< HEAD
       test('the user can enter more characters', function() {
         assert.equal(input.maxLength, -1);
       });
@@ -351,6 +376,10 @@ suite('thread_ui.js >', function() {
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
+=======
+      test('no alert is sent', function() {
+        assert.isNull(Mockalert.mLastMessage);
+>>>>>>> 840069
       });
     });
 
@@ -410,6 +439,7 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
+<<<<<<< HEAD
       test('the user can not enter more characters', function() {
         assert.equal(input.maxLength, input.value.length);
       });
@@ -426,6 +456,8 @@ suite('thread_ui.js >', function() {
       test('the send button should be disabled', function() {
         assert.isFalse(shouldEnableSend);
       });
+=======
+>>>>>>> 840069
     });
   });
 

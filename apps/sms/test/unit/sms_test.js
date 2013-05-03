@@ -20,6 +20,7 @@ requireApp('sms/test/unit/utils_mockup.js');
 requireApp('sms/test/unit/messages_mockup.js');
 requireApp('sms/test/unit/thread_list_mockup.js');
 requireApp('sms/js/message_manager.js');
+requireApp('sms/js/attachment.js');
 requireApp('sms/js/thread_list_ui.js');
 requireApp('sms/js/thread_ui.js');
 requireApp('sms/js/waiting_screen.js');
@@ -912,3 +913,4 @@ suite('SMS App Unit-Test', function() {
     });
   });
 });
+
