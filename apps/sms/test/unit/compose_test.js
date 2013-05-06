@@ -17,7 +17,7 @@ suite('compose_test.js', function() {
 
       loadBodyHTML('/index.html');
       ThreadUI.init();
-      message = Compose.dom.message;
+      message = document.querySelector("[contenteditable]");
 
     });
     suite('Placeholder', function() {

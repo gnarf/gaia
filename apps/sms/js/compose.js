@@ -166,9 +166,8 @@ var Compose = (function() {
       dom.message.innerHTML = '';
       composeCheck();
       return this;
-    },
+    }
     
-    dom: dom
   };
   return compose;
 }());
