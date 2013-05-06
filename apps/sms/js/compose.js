@@ -41,6 +41,7 @@ var Compose = (function() {
     }
 
     // TODO: remove this; failsafe for current code
+    // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=869159
     dom.message.value = dom.message.textContent;
   };
 
@@ -167,7 +168,7 @@ var Compose = (function() {
       composeCheck();
       return this;
     }
-    
+
   };
   return compose;
 }());
