@@ -7,7 +7,6 @@ mocha.globals(['0']);
 
 requireApp('sms/js/compose.js');
 requireApp('sms/test/unit/mock_attachment.js');
-require('/shared/test/unit/load_body_html_helper.js');
 
 suite('compose_test.js', function() {
 
@@ -40,6 +39,7 @@ suite('compose_test.js', function() {
       test('Placeholder removed on input of attachment', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
+        attachment.mNextRender = document.createElement('iframe');
         Compose.append(attachment);
         var txt = Compose.getContent();
         var contains = message.classList.contains('placeholder');
@@ -69,6 +69,7 @@ suite('compose_test.js', function() {
       test('Clear removes attachment', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
+        attachment.mNextRender = document.createElement('iframe');
         Compose.append(attachment);
         var txt = Compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
@@ -92,13 +93,6 @@ suite('compose_test.js', function() {
         Compose.prepend('start');
         var txt = Compose.getContent();
         assert.equal(txt[0], 'startend', 'text is inserted at beginning');
-      });
-      test('Message insert - DOM node', function() {
-        var node = document.createElement('div');
-        node.innerHTML = 'NODE';
-        Compose.append(node);
-        var txt = Compose.getContent();
-        assert.equal(txt[0], 'NODE', 'First line contains "NODE"');
       });
       teardown(function() {
         Compose.clear();
@@ -138,6 +132,7 @@ suite('compose_test.js', function() {
       test('Just attachment', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
+        attachment.mNextRender = document.createElement('iframe');
         Compose.append(attachment);
         var txt = Compose.getContent();
         // clearing to remove the iframe so that mocha doesn't
@@ -149,6 +144,7 @@ suite('compose_test.js', function() {
       test('Attachment in middle of text', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '54321');
+        attachment.mNextRender = document.createElement('iframe');
         Compose.append('start');
         Compose.append(attachment);
         Compose.append('end');
@@ -164,16 +160,16 @@ suite('compose_test.js', function() {
       test('attachment with excess breaks', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '55555');
+        attachment.mNextRender = document.createElement('iframe');
         Compose.append('start');
-        // keep in mind FF will render <br><br> as just one :/
         Compose.append('<br><br><br><br>');
         Compose.append(attachment);
         Compose.append('end');
         var txt = Compose.getContent();
-        assert.equal(txt.length, 5, 'Three lines in txt');
+        assert.equal(txt.length, 7, 'Three lines in txt');
         assert.equal(txt[0], 'start', 'First line is start text');
-        assert.ok(txt[3] instanceof MockAttachment, 'Sub 4 is an attachment');
-        assert.equal(txt[4], 'end', 'Last line is end text');
+        assert.ok(txt[5] instanceof MockAttachment, 'Sub 4 is an attachment');
+        assert.equal(txt[6], 'end', 'Last line is end text');
       });
       teardown(function() {
         Compose.clear();
@@ -188,6 +184,8 @@ suite('compose_test.js', function() {
       test('Attaching creates iframe.attachment', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
+        attachment.mNextRender = document.createElement('iframe');
+        attachment.mNextRender.className = "attachment";
         Compose.append(attachment);
         var iframes = message.querySelectorAll('iframe');
         var txt = Compose.getContent();

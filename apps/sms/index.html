@@ -126,6 +126,7 @@
         </article>
         <form role="search" id="messages-compose-form" class="bottom messages-compose-form">
           <button id="messages-send-button" disabled data-l10n-id="send" type="submit">Send</button>
+          <!-- The <br> is needed because of https://bugzilla.mozilla.org/show_bug.cgi?id=414223 -->
           <div id="messages-input" contentEditable="true" name="message" placeholder="Message" data-l10n-id="composeMessage"><br></div>
         </form>
         <form role="dialog" id="messages-edit-form" role="dialog" data-type="edit" >
