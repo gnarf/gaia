@@ -76,18 +76,10 @@ suite('thread_ui.js >', function() {
     mocksHelper.setup();
     loadBodyHTML('/index.html');
 
-<<<<<<< HEAD
     sendButton = document.getElementById('messages-send-button');
     input = document.getElementById('messages-input');
     composeForm = document.getElementById('messages-compose-form');
     recipient = document.getElementById('messages-recipient');
-=======
-    loadBodyHTML('/index.html');
-    
-    container =  document.querySelector("#thread-messages");
-    sendButton = container.querySelector('#messages-send-button');
-    input = container.querySelector('#messages-input');
->>>>>>> 840069
 
     ThreadUI.init();
     realMozMobileMessage = ThreadUI._mozMobileMessage;
@@ -210,10 +202,6 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, '');
       });
 
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
@@ -239,21 +227,12 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, '');
       });
 
-<<<<<<< HEAD
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
-=======
-      test('no alert is sent', function() {
-        assert.isNull(Mockalert.mLastMessage);
->>>>>>> 840069
       });
     });
 
@@ -281,21 +260,12 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-<<<<<<< HEAD
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
-=======
-      test('no alert is sent', function() {
-        assert.isNull(Mockalert.mLastMessage);
->>>>>>> 840069
       });
     });
 
@@ -323,21 +293,12 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-<<<<<<< HEAD
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
-=======
-      test('no alert is sent', function() {
-        assert.isNull(Mockalert.mLastMessage);
->>>>>>> 840069
       });
     });
 
@@ -365,21 +326,12 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-<<<<<<< HEAD
-      test('the user can enter more characters', function() {
-        assert.equal(input.maxLength, -1);
-      });
-
       test('no banner is displayed', function() {
         assert.ok(banner.classList.contains('hide'));
       });
 
       test('the send button should be enabled', function() {
         assert.isTrue(shouldEnableSend);
-=======
-      test('no alert is sent', function() {
-        assert.isNull(Mockalert.mLastMessage);
->>>>>>> 840069
       });
     });
 
@@ -401,10 +353,6 @@ suite('thread_ui.js >', function() {
       test('a counter is displayed', function() {
         var expected = availableChars + '/' + segment;
         assert.equal(sendButton.dataset.counter, expected);
-      });
-
-      test('the user can not enter more characters', function() {
-        assert.equal(input.maxLength, input.value.length);
       });
 
       test('the banner is displayed', function() {
@@ -439,25 +387,6 @@ suite('thread_ui.js >', function() {
         assert.equal(sendButton.dataset.counter, expected);
       });
 
-<<<<<<< HEAD
-      test('the user can not enter more characters', function() {
-        assert.equal(input.maxLength, input.value.length);
-      });
-
-      test('the banner is displayed', function() {
-        assert.isFalse(banner.classList.contains('hide'));
-      });
-
-      test('the banner has the exceeded length message', function() {
-        var actual = banner.querySelector('p').textContent;
-        assert.equal(actual, 'messages-exceeded-length-text');
-      });
-
-      test('the send button should be disabled', function() {
-        assert.isFalse(shouldEnableSend);
-      });
-=======
->>>>>>> 840069
     });
   });
 
