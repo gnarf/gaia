@@ -30,11 +30,11 @@ Attachment.prototype = {
     var _ = navigator.mozL10n.get;
     var el = document.createElement('iframe');
     el.setAttribute('sandbox', '');
-    var src = "data:text/html,";
+    var src = 'data:text/html,';
     // We want kilobytes so we divide by 1024, with one fractional digit
     var size = Math.floor(this.size / 102.4) / 10;
     var sizeString = _('attachmentSize', {n: size});
-    src += Utils.Template("attachment-tmpl").interpolate({
+    src += Utils.Template('attachment-tmpl').interpolate({
       uri: this.uri,
       size: sizeString
     });
