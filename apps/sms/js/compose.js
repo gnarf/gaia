@@ -23,7 +23,7 @@ var Compose = (function() {
   function composeCheck(e) {
     var empty = !dom.message.textContent.length;
     if (empty) {
-      var brs = dom.message.querySelectorAll('br');
+      var brs = dom.message.getElementsByTagName('br');
       var attachment = dom.message.querySelector('iframe');
       // firefox will keep an extra <br> in there
       if (brs.length > 1 || attachment !== null) {
