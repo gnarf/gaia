@@ -43,7 +43,7 @@ var Compose = (function() {
     // TODO: remove this; failsafe for current code
     // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=869159
     dom.message.value = dom.message.textContent;
-  };
+  }
 
   function insert(item) {
     var fragment = document.createDocumentFragment();
@@ -89,7 +89,7 @@ var Compose = (function() {
       var node;
       var i;
 
-      for (var node = dom.message.firstChild; node; node = node.nextSibling) {
+      for (node = dom.message.firstChild; node; node = node.nextSibling) {
         // hunt for an attachment in the WeakMap and append it
         var attachment = attachments.get(node);
         if (attachment) {
