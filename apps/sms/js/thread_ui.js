@@ -505,6 +505,10 @@ var ThreadUI = global.ThreadUI = {
 
     // Retrieve elements useful in growing method
     var bottomBar = this.composeForm;
+    var bottomBarMaxHeight = parseInt(bottomBar.style.maxHeight, 10);
+
+    // Wwe need to grow the input step by step
+    this.input.style.height = null;
 
     // Updating the height if scroll is bigger that height
     // This is when we have reached the header (UX requirement)
@@ -513,7 +517,7 @@ var ThreadUI = global.ThreadUI = {
       this.input.style.height = inputMaxHeight / fontSize + 'rem';
       // Update the bottom bar height taking into account the padding
       bottomBar.style.height =
-        inputMaxHeight / fontSize + verticalPadding + 'rem';
+        bottomBarMaxHeight / fontSize + verticalPadding + 'rem';
       // We update the position of the button taking into account the
       // new height
       this.sendButton.style.marginTop =
@@ -521,8 +525,6 @@ var ThreadUI = global.ThreadUI = {
       return;
     }
 
-    // In a regular scenario, we need to grow the input step by step
-    this.input.style.height = null;
     // If the scroll height is smaller than original offset height, we keep
     // offset height to keep original height, otherwise we use scroll height
     // with additional margin for preventing scroll bar.
