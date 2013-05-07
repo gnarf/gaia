@@ -113,7 +113,7 @@ suite('thread_ui.js >', function() {
     });
 
     test('button should be enabled when there is some text', function() {
-      Compose.append('hola');
+      input.innerHTML = 'Hola';
       ThreadUI.enableSend();
       assert.isFalse(sendButton.disabled);
     });
@@ -149,7 +149,7 @@ suite('thread_ui.js >', function() {
       });
 
       test('button should be disabled when there is no contact', function() {
-        Compose.append('hola');
+        input.innerHTML = 'Hola';
         ThreadUI.enableSend();
         assert.isTrue(sendButton.disabled);
       });
@@ -157,7 +157,7 @@ suite('thread_ui.js >', function() {
       test('button should be enabled when there is both contact and input',
         function() {
 
-        Compose.append('hola');
+        input.innerHTML = 'Hola';
         var recipient = ThreadUI.appendEditableRecipient();
         ThreadUI.createRecipient(recipient);
         ThreadUI.enableSend();
