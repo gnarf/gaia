@@ -53,7 +53,7 @@ var ThreadUI = global.ThreadUI = {
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozMobileMessage` API
     this._mozMobileMessage = navigator.mozMobileMessage ||
-                              window.DesktopMockNavigatormozMobileMessage;
+      window.DesktopMockNavigatormozMobileMessage;
 
     // In case of input, we have to resize the input following UX Specs.
     Compose.on('input', this.messageComposerInputHandler.bind(this));
@@ -451,7 +451,8 @@ var ThreadUI = global.ThreadUI = {
   // will return true if we can send the message, false if we can't send the
   // message
   updateCounter: function thui_updateCount() {
-    if (!this._mozMobileMessage.getSegmentInfoForText) {
+    if (!(this._mozMobileMessage &&
+          this._mozMobileMessage.getSegmentInfoForText)) {
       return true;
     }
 

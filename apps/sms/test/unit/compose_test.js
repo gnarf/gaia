@@ -13,12 +13,11 @@ suite('compose_test.js', function() {
   suite('Message Composition', function() {
 
     var message;
+    var mozMobileMessage;
     setup(function() {
-
       loadBodyHTML('/index.html');
       ThreadUI.init();
-      message = document.querySelector("[contenteditable]");
-
+      message = document.querySelector('[contenteditable]');
     });
     suite('Placeholder', function() {
       setup(function(done) {
@@ -185,7 +184,7 @@ suite('compose_test.js', function() {
         var attachment = new MockAttachment('image',
                        '/test/unit/media/IMG_0554.jpg', '12345');
         attachment.mNextRender = document.createElement('iframe');
-        attachment.mNextRender.className = "attachment";
+        attachment.mNextRender.className = 'attachment';
         Compose.append(attachment);
         var iframes = message.querySelectorAll('iframe');
         var txt = Compose.getContent();

@@ -16,6 +16,7 @@ requireApp('sms/js/link_helper.js');
 requireApp('sms/js/contacts.js');
 requireApp('sms/js/fixed_header.js');
 requireApp('sms/js/utils.js');
+requireApp('sms/js/compose.js');
 requireApp('sms/test/unit/utils_mockup.js');
 requireApp('sms/test/unit/messages_mockup.js');
 requireApp('sms/test/unit/thread_list_mockup.js');
