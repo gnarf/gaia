@@ -595,10 +595,12 @@ form.bottom[role="search"].messages-compose-form {
   Styles related to the new layout of the composer
 */
 
+
 #messages-to-field {
   display: none;
   text-align: left;
-  min-height: 3.7rem;
+  min-height: 3.5rem;
+  height: 3.5rem;
   overflow: hidden;
   border-bottom: .1rem solid #949494;
   color: black;
@@ -610,6 +612,7 @@ form.bottom[role="search"].messages-compose-form {
   z-index: 10;
   background: #E4E4E4;
   font-size: 1.465rem;
+  transition: height 0.5s ease-in-out;
 }
 
 section[role="region"].new #messages-to-field {
@@ -620,7 +623,6 @@ section[role="region"].new #messages-to-field {
   display: inline-block;
   width: 2.5rem;
   position: absolute;
-  top: 1.9rem;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -644,18 +646,24 @@ section[role="region"].new #messages-to-field {
   line-height: 4rem;
 }
 
-#messages-recipients-container {
-  top: .9rem;
+#messages-recipients-list {
+  /* From JS, Make this overflow:scroll when it's time to make this field scrollable
+  */
+  overflow-y: hidden;
+  overflow-x: hidden;
+  top: -0.3rem;
   left: 3rem;
   position: relative;
   width: 10rem;
   display: inline-block;
-  width: -moz-calc(100% - 6.8rem);
+  width: -moz-calc(100% - 4rem);
+  height: 3.5rem;
+  transition: height 0.5s ease-in-out;
 }
 
 .recipient {
   background: white;
-  padding: .2rem 0.8rem;
+  padding: .2rem 0.5rem;
   display: inline-block;
   overflow: hidden;
   white-space: nowrap;
@@ -666,6 +674,7 @@ section[role="region"].new #messages-to-field {
   height: 2rem;
   margin-right: .5rem;
   border-radius: .2rem;
+  font-size: 1.8rem;
 }
 
 .recipient[contenteditable=true] {
@@ -675,6 +684,11 @@ section[role="region"].new #messages-to-field {
   white-space: normal;
   text-overflow: normal;
   color: black;
+  font-size: 1.8rem;
+}
+
+.recipient:focus {
+  /*border: dotted 1px red;*/
   font-size: 1.8rem;
 }
 
@@ -705,7 +719,6 @@ section[role="region"].new #messages-container[data-type="list"]  li{
 .suggestion * {
   pointer-events : none;
 }
-
 .subheader {
   position: absolute;
   z-index: 5; /* should be between 4 and 9 (inclusive). 3 is the z-index for
