@@ -50,7 +50,6 @@ var ThreadUI = global.ThreadUI = {
       this[Utils.camelCase(id)] = document.getElementById('messages-' + id);
     }, this);
 
-
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozMobileMessage` API
     this._mozMobileMessage = navigator.mozMobileMessage ||
