@@ -20,8 +20,26 @@ var Compose = (function() {
     button: null
   };
 
+  var handlers = {
+    input: []
+  };
+
+  var state = {
+    empty: true,
+    maxLength: null,
+    lock: false
+  };
+
+  // handler for 'input' in contentEditable
   function composeCheck(e) {
-    var empty = !dom.message.textContent.length;
+
+    var textLength = dom.message.textContent.length;
+    var empty = !textLength;
+
+    if (state.maxLength && textContent.length >= state.maxLength) {
+      state.lock = true;
+    }
+
     if (empty) {
       var brs = dom.message.getElementsByTagName('br');
       var attachment = dom.message.querySelector('iframe');
@@ -34,16 +52,36 @@ var Compose = (function() {
     if (placeholding && !empty) {
       dom.message.classList.remove(placeholderClass);
       compose.disable(false);
+      state.empty = false;
     }
     if (!placeholding && empty) {
       dom.message.classList.add(placeholderClass);
       compose.disable(true);
+      state.empty = true;
     }
 
-    // TODO: remove this; failsafe for current code
-    // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=869159
-    dom.message.value = dom.message.textContent;
+    trigger('input', e);
   }
+
+  function composeLockCheck(e) {
+    // if locking and no-backspace pressed, cancel
+    if (state.lock && e.which !== 8) {
+      e.preventDefault();
+    } else {
+      state.lock = false;
+    }
+  }
+
+  function trigger(type) {
+    var fns = handlers[type];
+    var args = [].slice(arguments, 1);
+    if (fns && fns.length) {
+      for (var i = 0; i < fns.length; i++) {
+        fns[i].apply(this, args);
+      }
+    }
+  }
+
 
   function insert(item) {
     var fragment = document.createDocumentFragment();
@@ -79,8 +117,17 @@ var Compose = (function() {
 
       // update the placeholder after input
       dom.message.addEventListener('input', composeCheck);
-      composeCheck();
+      dom.message.addEventListener('keydown', composeLockCheck);
+
+      this.clear();
+
       return this;
+    },
+
+    on: function(type, handler) {
+      if (handlers[type]) {
+        handlers[type].push(handler);
+      }
     },
 
     getContent: function() {
@@ -116,6 +163,26 @@ var Compose = (function() {
       return content.slice(0, lastContent);
     },
 
+    getText: function() {
+      return dom.message.textContent;
+    },
+
+    isEmpty: function() {
+      return state.empty;
+    },
+
+    /** Sets the max number of chars allowed in the compositio area
+     * @param {mixed} Number of characters to limit input to
+     *                or `false` for no limit.
+     */
+    setMaxLength: function(amount) {
+      state.maxLength = amount;
+      state.lock;
+      if (this.getText().length >= state.maxLength) {
+        state.lock = true;
+      }
+    },
+
     disable: function(state) {
       dom.button.disabled = state;
       return this;
@@ -140,7 +207,6 @@ var Compose = (function() {
       }
 
       composeCheck();
-      ThreadUI.updateInputHeight();
       return this;
     },
 
@@ -158,13 +224,12 @@ var Compose = (function() {
         dom.message.appendChild(fragment);
       }
 
-      composeCheck();
-      ThreadUI.updateInputHeight();
       return this;
     },
 
     clear: function() {
-      dom.message.innerHTML = '';
+      dom.message.innerHTML = '<br>';
+      state.full = false;
       composeCheck();
       return this;
     }
