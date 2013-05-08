@@ -1028,6 +1028,8 @@ var ThreadUI = global.ThreadUI = {
           return;
         }
         nums = this.recipients.numbers;
+        // send user back to the thread list when done with a new message
+        window.location.hash = '#thread-list';
       } else {
         nums = MessageManager.currentNums;
       }
