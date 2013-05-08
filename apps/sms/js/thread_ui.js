@@ -507,7 +507,7 @@ var ThreadUI = global.ThreadUI = {
     var bottomBar = this.composeForm;
     var bottomBarMaxHeight = parseInt(bottomBar.style.maxHeight, 10);
 
-    // Wwe need to grow the input step by step
+    // We need to grow the input step by step
     this.input.style.height = null;
 
     // Updating the height if scroll is bigger that height
