@@ -452,7 +452,7 @@ var ThreadUI = global.ThreadUI = {
   // message
   updateCounter: function thui_updateCount() {
     if (!this._mozMobileMessage.getSegmentInfoForText) {
- //     return true;
+      return true;
     }
 
     var value = Compose.getText();
