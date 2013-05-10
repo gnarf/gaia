@@ -448,8 +448,8 @@ var ThreadUI = global.ThreadUI = {
         bottomBarMaxHeight / fontSize + verticalPadding + 'rem';
       // We update the position of the button taking into account the
       // new height
-      this.sendButton.style.marginTop =
-        (this.input.offsetHeight - buttonHeight) / fontSize + 'rem';
+      // this.sendButton.style.marginTop =
+      //   (this.input.offsetHeight - buttonHeight) / fontSize + 'rem';
       return;
     }
 
@@ -469,9 +469,9 @@ var ThreadUI = global.ThreadUI = {
     bottomBar.style.height = bottomBarHeight;
 
     // We move the button to the right position
-    var buttonOffset = (this.input.offsetHeight - buttonHeight) /
-      fontSize + 'rem';
-    this.sendButton.style.marginTop = buttonOffset;
+    // var buttonOffset = (this.input.offsetHeight - buttonHeight) /
+    //   fontSize + 'rem';
+    // this.sendButton.style.marginTop = buttonOffset;
 
     // Last adjustment to view taking into account the new height of the bar
     this.container.style.bottom = bottomBarHeight;
