@@ -288,6 +288,10 @@ var MessageManager = {
     return this._mozMobileMessage.getMessage(id);
   },
 
+  retrieveMMS: function mm_retrieveMMS(id) {
+    return this._mozMobileMessage.retrieveMMS(id);
+  },
+
   getMessages: function mm_getMgs(options) {
     var stepCB = options.stepCB, // CB which manage every message
         filter = options.filter, // mozMessageFilter
