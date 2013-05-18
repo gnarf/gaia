@@ -38,6 +38,10 @@
       threads = new Map();
     },
     size: function() {
+      // support: gecko 18 - size might be a function
+      if (typeof threads.size === 'function') {
+        return +threads.size();
+      }
       return +threads.size;
     },
     get currentId() {
