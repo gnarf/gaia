@@ -11,12 +11,12 @@ suite('Threads', function() {
   suite('Collection', function() {
     test('is like a Map', function() {
       assert.ok(Threads);
-      assert.ok(Threads.set);
-      assert.ok(Threads.get);
-      assert.ok(Threads.has);
-      assert.ok(Threads.delete);
-      assert.ok(Threads.clear);
-      assert.ok(Threads.size);
+      assert.isFunction(Threads.set);
+      assert.isFunction(Threads.get);
+      assert.isFunction(Threads.has);
+      assert.isFunction(Threads.delete);
+      assert.isFunction(Threads.clear);
+      assert.isNumber(Threads.size);
       assert.equal(Threads.currentId, null);
       assert.equal(Threads.active, null);
     });
@@ -24,14 +24,14 @@ suite('Threads', function() {
     test('Threads.set(key, val)', function() {
       Threads.set(1, {});
       assert.deepEqual(Threads.get(1), { messages: [] });
-      assert.equal(Threads.size(), 1);
+      assert.equal(Threads.size, 1);
     });
 
     test('Threads.get(key)', function() {
       Threads.set(1, {});
       var value = Threads.get(1);
       assert.ok(Array.isArray(value.messages));
-      assert.equal(Threads.size(), 1);
+      assert.equal(Threads.size, 1);
     });
 
     test('Threads.has(key)', function() {
@@ -43,10 +43,10 @@ suite('Threads', function() {
     test('Threads.delete()', function() {
       Threads.set(1, {});
       assert.equal(Threads.has(1), true);
-      assert.equal(Threads.size(), 1);
+      assert.equal(Threads.size, 1);
       Threads.delete(1);
       assert.equal(Threads.has(1), false);
-      assert.equal(Threads.size(), 0);
+      assert.equal(Threads.size, 0);
     });
   });
 

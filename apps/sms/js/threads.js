@@ -37,7 +37,7 @@
     clear: function() {
       threads = new Map();
     },
-    size: function() {
+    get size() {
       // support: gecko 18 - size might be a function
       if (typeof threads.size === 'function') {
         return +threads.size();
