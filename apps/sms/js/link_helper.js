@@ -7,13 +7,14 @@
 
 var LinkHelper = {
   _urlRegex: new RegExp([
-      '(^|\\s|,|;|<br>)',             // right before
-      '(https?://)?',                 // protocol (if any)
-      '[-\\w%\\+.~#?&//=]{2,256}',    // server name
-      '\\.[a-z]{2,6}(:[0-9]{2,4})?',  // .domain[:port]
-      '(\\/[-\\w:%\\+.~#?;&//=]*)?'   // queries
+      '(^|\\s|,|;|<br>)',                 // right before
+      '(https?://)?',                     // protocol (if any)
+      '([-\\w\\.]{2,256})',               // server name
+      '(\\.[-\\w\\.]{2,})(:[0-9]{2,5})?', // .domain[:port]
+      '(\\/[-\\w:%\\+~#?;&//=]*)?',       // queries
+      '(\\.[\\w]+)?'                      // to avoid ending dot
       ].join(''), 'mgi'),
-  _emailRegex: /([\w\.-]+)@([\w\.-]+)\.([a-z\.]{2,6})/mgi,
+  _emailRegex: /([\w\.\+-]+)@([\w\.-]+)\.([a-z\.]{2,6})/mgi,
   _phoneRegex: new RegExp(['(\\+?1?[-.]?\\(?([0-9]{3})\\)?',
     '[-.]?)?([0-9]{3})[-.]?([0-9]{4})([0-9]{1,4})?'].
     join(''), 'mg'),
@@ -22,6 +23,23 @@ var LinkHelper = {
   function lh_searchAndLinkUrl(urltext) {
     var result = urltext.replace(this._urlRegex,
        function lh_processedUrl(url, delimiter) {
+      // workaround for bug 870711 for cases like http://www.wikipedia.o/
+      // aaa...ccc or http://www.a/b/c.com
+      var multipointsChecker = function(argument) {
+        var multipoints = argument.split('.');
+        for (var i = 0; i < multipoints.length; i++) {
+          if (multipoints[i].length < 2) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      if (multipointsChecker(arguments[3] + arguments[4])) {
+        return url;
+      }
+
       var linkText = '';
 
       //check if url has http(s) in beginning,if not append
