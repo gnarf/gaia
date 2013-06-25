@@ -126,7 +126,8 @@
       'operatorvariant': {
         'ril.iccInfo.mbdn': 'voicemail',
         'ril.sms.strict7BitEncoding.enabled': 'enableStrict7BitEncodingForSms',
-        'ril.cellbroadcast.searchlist': 'cellBroadcastSearchList'
+        'ril.cellbroadcast.searchlist': 'cellBroadcastSearchList',
+        'dom.mms.operatorSizeLimitation': 'operatorSizeLimitation'
       }
     };
 
@@ -150,14 +151,25 @@
       for (var key in prefNames) {
         var name = apnPrefNames[type][key];
         var item = {};
-        if (booleanPrefNames.indexOf(key) != -1) {
-          item[key] = apn[name] || false;
-        } else {
-          if (name === 'authtype') {
+        switch (name) {
+          // load values from the AUTH_TYPES
+          case 'authtype':
             item[key] = apn[name] ? AUTH_TYPES[apn[name]] : 'notDefined';
-          } else {
-            item[key] = apn[name] || '';
-          }
+            break;
+
+          // default to 300k
+          case 'operatorSizeLimitation':
+            item[key] = apn[name] || 300 * 1024;
+            break;
+
+          // all other keys default to empty strings
+          default:
+            if (booleanPrefNames.indexOf(key) !== -1) {
+              item[key] = apn[name] || false;
+            } else {
+              item[key] = apn[name] || '';
+            }
+            break;
         }
         transaction.set(item);
       }
