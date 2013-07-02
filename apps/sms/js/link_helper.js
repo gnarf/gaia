@@ -86,16 +86,16 @@ var LINK_TYPES = {
 
   phone: {
     regexp: new RegExp([
-      '(\\+?1?[-.]?\\(?([0-9]{3})\\)?',
-      '[-.]?)?([0-9]{3})[-.]?([0-9]{4})([0-9]{1,4})?'
+      // sdd: space, dot, dash or parens
+      '(\\+\\d{1,4}[\\s.()-]{0,3}|\\()?' +       // (\+<digits><sdd>|\()?
+      '(\\d{1,4}[\\s.()-]{0,3})?' +              // <digits><sdd>*
+      '(\\d[\\d\\s.()-]{0,100}\\d)'              // <digit><digit|sdd>+<digit>
       ].join(''), 'mg'),
     transform: function phoneTransform(phone) {
-      phone = phone.replace(nonPhoneRE, '');
-      return [
-        '<a data-phonenumber="',
-        '" data-action="phone-link">',
-        '</a>'
-      ].join(phone);
+      var dialable = Utils.removeNonDialables(phone);
+
+      return '<a data-phonenumber="' + dialable +
+        '" data-action="phone-link">' + phone + '</a>';
      }
   }
 };

@@ -5,6 +5,12 @@
 
 requireApp('sms/js/link_helper.js');
 
+requireApp('sms/js/utils.js');
+requireApp('sms/test/unit/mock_utils.js', MockUtilsLoadedForLinkHelper);
+
+// wait for mock utils loaded so we can use the data to do stuff
+function MockUtilsLoadedForLinkHelper() {
+
 suite('link_helper_test.js', function() {
 
   suite('LinkHelper URL replacements', function() {
@@ -165,7 +171,8 @@ suite('link_helper_test.js', function() {
   suite('LinkHelper Phone replacements', function() {
 
     function phone2msg(phone) {
-      return '<a data-phonenumber="' + phone + '"' +
+      var dialable = Utils.removeNonDialables(phone);
+      return '<a data-phonenumber="' + dialable + '"' +
              ' data-action="phone-link">' + phone + '</a>';
     }
 
@@ -188,6 +195,22 @@ suite('link_helper_test.js', function() {
       testPhoneOK('+33612345678');
     });
 
+    test('Phone from #887737', function() {
+      testPhoneOK('+5511 98907-6047');
+    });
+
+    suite('Varied cases', function() {
+      MockUtils.mPhoneTestCases.forEach(function(fixture) {
+        suite(fixture.name, function() {
+          fixture.values.forEach(function(value) {
+            test(value, function() {
+              testPhoneOK(value);
+            });
+          });
+        });
+      });
+    });
+
   });
 
   suite('Multiple in the same string', function() {
@@ -205,3 +228,5 @@ suite('link_helper_test.js', function() {
     });
   });
 });
+
+}
