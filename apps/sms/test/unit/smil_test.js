@@ -59,7 +59,10 @@ suite('SMIL', function() {
       var messageData = {
         attachments: [
           {content: new Blob([text], {type: 'text/plain'})},
-          {content: testImageBlob, location: 'example.jpg'}
+          {
+            content: testImageBlob,
+            location: 'example.jpg'
+          }
         ]
       };
       SMIL.parse(messageData, function(output) {
@@ -272,6 +275,36 @@ suite('SMIL', function() {
       assert.equal(doc.querySelector('text').getAttribute('region'), 'Text');
       assert.equal(doc.querySelector('img').getAttribute('region'), 'Image');
     });
+
+    test('Message with path as filename', function() {
+      var smilTest = [{
+        text: 'Testing a caption',
+        name: 'SDCARD/DCIM/kitten-450.jpg',
+        blob: testImageBlob
+      }];
+      var output = SMIL.generate(smilTest);
+
+      assert.equal(output.attachments.length, 2);
+
+      assert.equal(output.attachments[0].location, 'kitten-450.jpg');
+    });
+
+    test('Message with same filename from different path', function() {
+      var smilTest = [{
+        text: 'Testing a caption',
+        name: 'SDCARD/DCIM/kitten-450.jpg',
+        blob: testImageBlob
+      },{
+        text: 'Testing a caption',
+        name: 'SDCARD/DCIM23/kitten-450.jpg',
+        blob: testImageBlob
+      }];
+      var output = SMIL.generate(smilTest);
+      assert.equal(output.attachments.length, 4);
+      assert.equal(output.attachments[0].location, 'kitten-450.jpg');
+      assert.equal(output.attachments[2].location, 'kitten-450_2.jpg');
+    });
+
     test('Message with duplicate filename', function() {
       var smilTest = [{
         text: 'Testing a caption',

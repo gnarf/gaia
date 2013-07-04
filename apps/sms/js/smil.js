@@ -61,16 +61,18 @@ function SMIL_generateSlides(data, slide, slideIndex) {
   // each slide can have a piece of media and/or text
   var media = '';
   var text = '';
+  var name = '';
   if (slide.blob) {
     blobType = Utils.typeFromMimeType(slide.blob.type);
     if (blobType) {
-      // just to be safe, remove any non-standard characters from the filenam
-      id = slide.name.replace(runsafefilename, '');
-      id = SMIL_generateUniqueLocation(data, id);
-      media = '<' + blobType + ' src="' + id + '" region="Image"/>';
+      // just to be safe, remove any non-standard characters from the filename
+      name = Utils.escapeHTML(slide.name);
+      name = name.substr(name.lastIndexOf('/') + 1);
+      name = SMIL_generateUniqueLocation(data, name);
+      media = '<' + blobType + ' src="' + name + '" region="Image"/>';
       data.attachments.push({
-        id: '<' + id + '>',
-        location: id,
+        id: '<' + name + '>',
+        location: name,
         content: slide.blob
       });
     }
@@ -96,12 +98,14 @@ function SMIL_generateUniqueLocation(data, location) {
     return attachment.location === location;
   }
   var index;
+  var dupIndex = 2;
   while (data.attachments.some(SMIL_uniqueLocationMatches)) {
     index = location.lastIndexOf('.');
     if (index === -1) {
       index = location.length;
     }
-    location = location.slice(0, index) + '_' + location.slice(index);
+    location = location.slice(0, index) +
+        '_' + (dupIndex++) + location.slice(index);
   }
   return location;
 }
@@ -228,6 +232,7 @@ var SMIL = window.SMIL = {
       var slide = {};
       var attachment;
       var src;
+      var name;
 
       slides.push(slide);
       if (mediaElement) {
