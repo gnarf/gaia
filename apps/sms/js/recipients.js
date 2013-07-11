@@ -339,6 +339,8 @@
     // new "editable" placeholders, by cloning the
     // first child (element) node
     clone.innerHTML = template.interpolate(new Recipient());
+    // empty out the template so :empty matches on placeholders
+    clone.firstElementChild.innerHTML = '';
 
     Object.defineProperties(this, {
       last: {
