@@ -94,12 +94,16 @@
         canvas.height = Math.round(img.height / ratio);
         var context = canvas.getContext('2d');
         context.drawImage(img, 0, 0, width, height);
-        var data = canvas.toDataURL(type);
 
-        callback({
-          width: width,
-          height: height,
-          data: data
+        canvas.toBlob(function(data) {
+          data = window.URL.createObjectURL(data);
+
+          callback({
+            width: width,
+            height: height,
+            data: data,
+            type: type || 'image/jpeg'
+          });
         });
       };
       img.onerror = function onBlobError() {
@@ -117,18 +121,26 @@
       return Utils.Template(tmplID).interpolate({
         type: this.type,
         errorClass: thumbnail.error ? 'corrupted' : '',
-        imgData: thumbnail.data,
         fileName: this.name.slice(this.name.lastIndexOf('/') + 1),
         size: this.sizeForHumans
       });
     },
 
-    bubbleEvents: function(event) {
+    bubbleEvents: function(img, hasPreview, event) {
       // Bubble click events from inside the iframe.
       var iframe = event.target;
       var clickOnFrame = iframe.click.bind(iframe);
       iframe.contentDocument.addEventListener('click', clickOnFrame);
       iframe.contentDocument.addEventListener('contextmenu', clickOnFrame);
+
+      // Attachment image can't be added before the iframe is loaded,
+      // as iframe's src is used and image onload event is needed.
+      if (img && hasPreview) {
+        var sizeElement = iframe.contentDocument
+          .querySelector('.size-indicator');
+        iframe.contentDocument.querySelector('.attachment')
+          .insertBefore(img, sizeElement);
+      }
     },
 
     render: function(readyCallback) {
@@ -167,6 +179,13 @@
         var tmplID = 'attachment-' + previewClass + '-tmpl';
         container.classList.add(previewClass);
 
+        var img = document.createElement('img');
+        img.className = 'thumbnail';
+        img.src = thumbnail.data;
+        img.onload = function thumbnailLoad() {
+          window.URL.revokeObjectURL(this.src);
+        };
+
         if (this.isDraft) { // <iframe>
           var tmplSrc = Utils.Template('attachment-draft-tmpl').interpolate({
             previewClass: previewClass,
@@ -182,10 +201,17 @@
           // Attach click listeners and fire the callback when rendering is
           // complete: we can't bind `readyCallback' to the `load' event
           // listener because it would break our unit tests.
-          container.addEventListener('load', this.bubbleEvents.bind(this));
+          container.addEventListener('load',
+            this.bubbleEvents.bind(this, img, hasPreview));
           container.src = 'data:text/html,' + tmplSrc;
         } else { // <div>
           container.innerHTML = this.getAttachmentSrc(thumbnail, tmplID);
+          // add image only if there's attachment preview
+          if (hasPreview) {
+            var sizeElement = container.querySelector('.size-indicator');
+            container.querySelector('.attachment')
+              .insertBefore(img, sizeElement);
+          }
         }
 
         if (readyCallback) {
