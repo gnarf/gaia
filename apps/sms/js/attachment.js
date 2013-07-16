@@ -121,25 +121,23 @@
       return Utils.Template(tmplID).interpolate({
         type: this.type,
         errorClass: thumbnail.error ? 'corrupted' : '',
+        imgData: thumbnail.data,
         fileName: this.name.slice(this.name.lastIndexOf('/') + 1),
         size: this.sizeForHumans
       });
     },
 
-    bubbleEvents: function(img, hasPreview, event) {
+    bubbleEvents: function(event) {
       // Bubble click events from inside the iframe.
       var iframe = event.target;
       var clickOnFrame = iframe.click.bind(iframe);
       iframe.contentDocument.addEventListener('click', clickOnFrame);
       iframe.contentDocument.addEventListener('contextmenu', clickOnFrame);
 
-      // Attachment image can't be added before the iframe is loaded,
-      // as iframe's src is used and image onload event is needed.
-      if (img && hasPreview) {
-        var sizeElement = iframe.contentDocument
-          .querySelector('.size-indicator');
-        iframe.contentDocument.querySelector('.attachment')
-          .insertBefore(img, sizeElement);
+      var img = iframe.contentDocument.querySelector('img');
+      if (img) {
+        img.addEventListener('load',
+          URL.revokeObjectURL.bind(URL, img.src));
       }
     },
 
@@ -179,13 +177,6 @@
         var tmplID = 'attachment-' + previewClass + '-tmpl';
         container.classList.add(previewClass);
 
-        var img = document.createElement('img');
-        img.className = 'thumbnail';
-        img.src = thumbnail.data;
-        img.onload = function thumbnailLoad() {
-          window.URL.revokeObjectURL(this.src);
-        };
-
         if (this.isDraft) { // <iframe>
           var tmplSrc = Utils.Template('attachment-draft-tmpl').interpolate({
             previewClass: previewClass,
@@ -201,16 +192,15 @@
           // Attach click listeners and fire the callback when rendering is
           // complete: we can't bind `readyCallback' to the `load' event
           // listener because it would break our unit tests.
-          container.addEventListener('load',
-            this.bubbleEvents.bind(this, img, hasPreview));
+          container.addEventListener('load', this.bubbleEvents);
           container.src = 'data:text/html,' + tmplSrc;
         } else { // <div>
           container.innerHTML = this.getAttachmentSrc(thumbnail, tmplID);
-          // add image only if there's attachment preview
-          if (hasPreview) {
-            var sizeElement = container.querySelector('.size-indicator');
-            container.querySelector('.attachment')
-              .insertBefore(img, sizeElement);
+          // bind an event to revoke the object URL
+          var img = container.querySelector('img');
+          if (img) {
+            img.addEventListener('load',
+              URL.revokeObjectURL.bind(URL, thumbnail.data));
           }
         }
 
