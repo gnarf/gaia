@@ -52,13 +52,18 @@ ul, ol {
 #alarms {
   width: 90%;
   height: auto;
-  max-height: calc(100% - 22rem);
+  max-height: calc(100% - 26rem);
   position: absolute;
   bottom: 0rem;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
+  padding-bottom: 4rem;
   background-color: transparent;
   background-image: none;
+}
+
+ul#alarms li:last-child {
+  margin-bottom: 4rem;
 }
 
 ul#alarms li.alarm-cell { /* 6rem, including a 0.13rem border */
