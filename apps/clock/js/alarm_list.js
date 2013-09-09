@@ -32,22 +32,21 @@ var AlarmList = {
       return;
 
     if (link === this.newAlarmButton) {
-
       this.alarmEditView();
+      evt.preventDefault();
     } else if (link.classList.contains('input-enable')) {
       this.toggleAlarmEnableState(link.checked,
         this.getAlarmFromList(parseInt(link.dataset.id, 10)));
     } else if (link.classList.contains('alarm-item')) {
-
       this.alarmEditView(this.getAlarmFromList(
         parseInt(link.dataset.id, 10)));
+      evt.preventDefault();
     }
   },
 
   alarmEditView: function(alarm) {
     LazyLoader.load(
       [
-        document.getElementById('alarm'),
         'js/alarm_edit.js',
         'shared/style/input_areas.css',
         'shared/style/buttons.css',
@@ -79,6 +78,7 @@ var AlarmList = {
   render: function al_render(alarm) {
     var repeat = alarm.isRepeating() ?
       alarm.summarizeDaysOfWeek() : '';
+    var withRepeat = alarm.isRepeating() ? ' with-repeat' : '';
     var isActive = alarm.registeredAlarms.normal ||
       alarm.registeredAlarms.snooze;
     var checked = !!isActive ? 'checked=true' : '';
@@ -97,6 +97,7 @@ var AlarmList = {
       label: label,
       meridian: time.p,
       repeat: repeat,
+      withRepeat: withRepeat,
       time: time.t
     });
   },

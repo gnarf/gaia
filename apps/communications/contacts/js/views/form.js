@@ -209,8 +209,10 @@ contacts.Form = (function() {
     formTitle.setAttribute('data-l10n-id', 'editContact');
     formTitle.textContent = _('editContact');
     currentContactId.value = contact.id;
-    givenName.value = contact.givenName || '';
-    familyName.value = contact.familyName || '';
+    givenName.value = Array.isArray(contact.givenName) ?
+                      contact.givenName[0] : '';
+    familyName.value = Array.isArray(contact.familyName) ?
+                       contact.familyName[0] : '';
     company.value = contact.org && contact.org.length > 0 ? contact.org[0] : '';
 
     if (nonEditableValues[company.value]) {
@@ -540,7 +542,10 @@ contacts.Form = (function() {
               // UI ready, passing duplicate contacts
               var duplicateContacts = {};
               Object.keys(results).forEach(function(id) {
-                duplicateContacts[id] = id;
+                duplicateContacts[id] = {
+                  matchingContactId: id,
+                  matchings: results[id].matchings
+                };
               });
 
               window.postMessage({
@@ -666,13 +671,17 @@ contacts.Form = (function() {
   };
 
   var createName = function createName(myContact) {
-    if (myContact.givenName || myContact.familyName) {
-      var name = (myContact.givenName && myContact.familyName) ?
-          myContact.givenName + ' ' + myContact.familyName :
-          myContact.givenName || myContact.familyName;
+    var givenName = Array.isArray(myContact.givenName) ?
+                    myContact.givenName[0] : '';
 
-      myContact.name = [name];
-    }
+    var familyName = Array.isArray(myContact.familyName) ?
+                     myContact.familyName[0] : '';
+
+    var completeName = givenName && familyName ?
+                       givenName + ' ' + familyName :
+                       givenName || familyName;
+
+    myContact.name = completeName ? [completeName] : [];
   };
 
   var setPropagatedFlag = function setPropagatedFlag(field, value, contact) {
