@@ -48,8 +48,8 @@ function loaded() {
         });
 
         // this test will actually create an error if we add a new method to
-        // the prototype unless we also add it to Complex
-        Object.keys(Emitter.prototype).forEach(function(method) {
+        // the prototype unless we also add it here
+        ['on', 'once', 'off', 'emit'].forEach(function(method) {
           test('has ' + method + '()', function() {
             assert.equal(this.emitter[method], Emitter.prototype[method]);
           });
@@ -108,6 +108,12 @@ function loaded() {
           test('.on() returns Emitter', function() {
             assert.equal(
               this.emitter.on('test', this.handlers[0]),
+              this.emitter
+            );
+          });
+          test('.once() returns Emitter', function() {
+            assert.equal(
+              this.emitter.once('test', this.handlers[0]),
               this.emitter
             );
           });
