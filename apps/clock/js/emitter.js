@@ -26,7 +26,7 @@ function getEvents(object, type) {
 
 
 // For use with Object.defineProperties
-var emitterMethodDescriptions = {
+var emitterMethodDescriptors = {
   /**
    * Bind Event Handlers
    * @param {string} type The event type to bind.
@@ -138,7 +138,7 @@ function Emitter() {}
  */
 Emitter.mixin = function(target) {
   // generate a non-enumerable property for each method
-  Object.defineProperties(target, emitterMethodDescriptions);
+  Object.defineProperties(target, emitterMethodDescriptors);
   return target;
 };
 
