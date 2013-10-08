@@ -196,7 +196,7 @@ var KeyboardManager = {
 
         var supportTypes = entryPoint.types;
         supportTypes.forEach(function(type) {
-          if (!type || !(type in BASE_TYPE))
+          if (!type || !KeyboardHelper.isBaseType(type))
             return;
 
           if (!self.keyboardLayouts[type])
