@@ -5,22 +5,35 @@
 
 /**
  * Helper object to access manifest information with locale support.
+ *
+ * @constructor
+ * @param {Object} manifest The app manifest.
  */
 
 var ManifestHelper = function(manifest) {
-  var localeRoot = manifest;
-  var locales = manifest.locales;
+  var locale = {};
+  var localeRoot = {};
 
-  if (locales) {
-    var lang = document.documentElement.lang;
+  if (manifest.locales) {
+    var lang = document.documentElement.lang || '';
 
-    // If there is a manifest entry for the curret locale, use it, otherwise
-    // fallback on the default manifest.
-    localeRoot = locales[lang] || locales[lang.split('-')[0]] || manifest;
+    locale = manifest.locales[lang] || {};
+    localeRoot = manifest.locales[lang.split('-')[0]] || {};
+  }
+
+  function ManifestHelper_get(prop) {
+    var value = locale[prop] || localeRoot[prop] || manifest[prop];
+    if (typeof value === 'object') {
+      return new ManifestHelper(value);
+    }
+    return value;
   }
 
   // Bind the localized property values.
   for (var prop in manifest) {
-    this[prop] = localeRoot[prop] || manifest[prop];
+    Object.defineProperty(this, prop, {
+      get: ManifestHelper_get.bind(null, prop),
+      enumerable: true
+    });
   }
 };
