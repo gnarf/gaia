@@ -108,7 +108,7 @@ var KeyboardContext = (function() {
 
         _layoutDict[keyboardAppInstance.origin] = {};
         for (var key in entryPoints) {
-          var layoutInstance = new ManifestHelper(entryPoints[key]);
+          var layoutInstance = entryPoints[key];
           if (!entryPoints[key].types) {
             console.warn('the keyboard app did not declare type.');
             continue;
@@ -150,7 +150,7 @@ var KeyboardContext = (function() {
         keyboard.description = keyboardManifest.description;
         keyboard.layouts.forEach(function(layout) {
           var key = layout.id;
-          var layoutInstance = new ManifestHelper(entryPoints[key]);
+          var layoutInstance = entryPoints[key];
           layout.appName = keyboardManifest.name;
           layout.name = layoutInstance.name;
           layout.description = layoutInstance.description;

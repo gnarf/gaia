@@ -179,10 +179,10 @@ var KeyboardManager = {
   parseLayoutType: function km_parseLayoutType(apps) {
     var self = this;
     apps.forEach(function(app) {
-      var entryPoints = app.manifest.entry_points;
       var manifest = new ManifestHelper(app.manifest);
+      var entryPoints = manifest.entry_points;
       for (var key in entryPoints) {
-        var entryPoint = new ManifestHelper(entryPoints[key]);
+        var entryPoint = entryPoints[key];
         if (!entryPoint.types) {
           console.warn('the keyboard app did not declare type.');
           continue;
