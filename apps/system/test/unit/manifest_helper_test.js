@@ -50,13 +50,17 @@ suite('ManifestHelper', function() {
       assert.equal(this.helper.description, this.data.description);
     });
     test('overriden with en-US', function() {
-      assert.equal(this.helper.test, this.data.locales['en-US'].test);
+      assert.equal(this.helper.test, 'en-US');
     });
     test('overriden with en', function() {
       assert.equal(this.helper.name, this.data.locales.en.name);
     });
     test('sub properties inherit locale translation', function() {
       assert.equal(this.helper.sub.overriden, 'true');
+    });
+    test('helper is sensitive to change in locale', function() {
+      document.documentElement.lang = 'en-GB';
+      assert.equal(this.helper.test, 'en');
     });
   });
 });
