@@ -27,6 +27,7 @@ suite('ManifestHelper', function() {
         test: 'none',
         sub: {
           test: 'none',
+          array: [1, 2, 3],
           overriden: 'false',
           locales: {
             en: {
@@ -57,6 +58,9 @@ suite('ManifestHelper', function() {
     });
     test('sub properties inherit locale translation', function() {
       assert.equal(this.helper.sub.overriden, 'true');
+    });
+    test('arrays stay arrays', function() {
+      assert.ok(this.helper.sub.array instanceof Array);
     });
     test('helper is sensitive to change in locale', function() {
       document.documentElement.lang = 'en-GB';

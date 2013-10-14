@@ -27,7 +27,7 @@ function ManifestHelper_get(prop) {
   }
 
   // return a new ManifestHelper for any object children
-  if (typeof value === 'object') {
+  if (typeof value === 'object' && !(value instanceof Array)) {
     value = new ManifestHelper(value);
   }
   return value;
