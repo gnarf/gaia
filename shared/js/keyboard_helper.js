@@ -145,10 +145,6 @@ function kh_parseEnabled() {
               layout.layoutId);
           }
         });
-
-        var evt = document.createEvent('CustomEvent');
-        evt.initCustomEvent('keyboardsrefresh', true, false, {});
-        window.dispatchEvent(evt);
       } catch (e) {
         currentSettings.enabled = map2d_clone(currentSettings['default']);
         needsSave = true;
@@ -185,6 +181,10 @@ Object.defineProperties(KeyboardLayout.prototype, {
       return map2d_is.call(
         currentSettings.enabled, this.app.origin, this.layoutId
       );
+    },
+    set: function(value) {
+      var method = value ? map2d_set : map2d_unset;
+      method.call(currentSettings.enabled, this.app.origin, this.layoutId);
     }
   }
 });
@@ -243,11 +243,35 @@ var KeyboardHelper = exports.KeyboardHelper = {
   setLayoutEnabled: function kh_setLayoutEnabled(appOrigin, layoutId, enabled) {
     var method = enabled ? map2d_set : map2d_unset;
     method.call(currentSettings.enabled, appOrigin, layoutId);
-    this.saveToSettings();
   },
 
   getLayoutEnabled: function kh_getLayoutEnabled(appOrigin, layoutId) {
     return map2d_is.call(currentSettings.enabled, appOrigin, layoutId);
+  },
+
+  checkDefaults: function kh_checkDefaults(callback) {
+    var layoutsEnabled = [];
+    ['type', 'url', 'number'].forEach(function eachType(type) {
+      // getLayouts is sync when we already have data
+      var enabled;
+      this.getLayouts({ type: type, enabled: true }, function(layouts) {
+        enabled = layouts.length;
+      });
+      if (!enabled) {
+        this.getLayouts({ type: type, 'default': true }, function(layouts) {
+          if (layouts[0]) {
+            layouts[0].enabled = true;
+            layoutsEnabled.push(layouts[0]);
+          }
+        });
+      }
+    }, this);
+
+    if (layoutsEnabled.length) {
+      if (callback) {
+        callback(layoutsEnabled);
+      }
+    }
   },
 
   saveToSettings: function ke_saveToSettings() {

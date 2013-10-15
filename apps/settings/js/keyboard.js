@@ -71,6 +71,14 @@ var KeyboardContext = (function() {
       _observable.observe('enabled', function(newValue, oldValue) {
         if (!_parsingApps) {
           KeyboardHelper.setLayoutEnabled(appOrigin, id, newValue);
+          // KeyboardHelper.checkDefaults(function defaultEnabled(defaults) {
+          //   var layout = defaults[0];
+          //   alert(navigator.mozL10n.get('defaultKeyboardEnabled', {
+          //     appName: layout.manifest.name,
+          //     layoutName: layout.entryPoint.name
+          //   }));
+          // });
+          KeyboardHelper.saveToSettings();
         }
       });
 
@@ -347,9 +355,13 @@ var InstalledLayoutsPanel = (function() {
     var refreshName = function() {
       layoutName.textContent = layout.name;
     };
+    var refreshCheckbox = function() {
+      checkbox.checked = layout.enabled;
+    };
+    refreshCheckbox();
     refreshName();
     layout.observe('name', refreshName);
-    checkbox.checked = layout.enabled;
+    layout.observe('enabled', refreshCheckbox);
 
     return container;
   };

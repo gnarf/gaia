@@ -123,9 +123,6 @@ var KeyboardManager = {
     // when an inline activity goes away.
     window.addEventListener('appwillclose', this);
     window.addEventListener('activitywillclose', this);
-    window.addEventListener('applicationinstallsuccess', this);
-    window.addEventListener('applicationuninstall', this);
-    window.addEventListener('keyboardsrefresh', this);
 
     // To handle keyboard layout switching
     window.addEventListener('mozChromeEvent', function(evt) {
@@ -473,6 +470,13 @@ var KeyboardManager = {
     var showed = this.showingLayout;
 
     this.switchChangeTimeout = setTimeout(function keyboardSwitchLayout() {
+      // KeyboardHelper.checkDefaults(
+      //   function() {
+      //     console.log('defaulted!');
+      //   KeyboardHelper.saveToSettings.bind(KeyboardHelper)();
+      //   }
+      // );
+
       var length = self.keyboardLayouts[showed.type].length;
       var index = (showed.index + 1) % length;
       if (!self.keyboardLayouts[showed.type])

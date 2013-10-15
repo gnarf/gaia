@@ -104,6 +104,7 @@ var MockKeyboardHelper = {
     this.watchCallback = callback;
     callback(this.layouts, { apps: true, settings: true });
   },
+  checkDefaults: function() {},
   setLayoutEnabled: function(appOrigin, layoutId, enabled) {
     this.layouts.some(function eachLayout(layout) {
       if (layout.app.origin === appOrigin && layout.layoutId === layoutId) {
@@ -111,8 +112,9 @@ var MockKeyboardHelper = {
         return true;
       }
     });
+  },
+  saveToSettings: function() {
     if (this.watchCallback) {
-      console.log('calling watchCallback');
       this.watchCallback(this.layouts, { settings: true });
     }
   }
