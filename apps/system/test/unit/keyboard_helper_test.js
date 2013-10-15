@@ -111,13 +111,10 @@ suite('KeyboardHelper', function() {
     KeyboardHelper.settings['default'] = defaultSettings['default'];
     KeyboardHelper.keyboardSettings = [];
     KeyboardHelper.init();
-    this.keyboardsrefresh = this.sinon.spy();
-    window.addEventListener('keyboardsrefresh', this.keyboardsrefresh);
   });
 
   teardown(function() {
     MockNavigatorSettings.mTeardown();
-    window.removeEventListener('keyboardsrefresh', this.keyboardsrefresh);
   });
 
   test('observes settings', function() {
@@ -253,6 +250,31 @@ suite('KeyboardHelper', function() {
       test(type + ': false', function() {
         assert.isFalse(KeyboardHelper.isKeyboardType(type));
       });
+    });
+  });
+
+  suite('checkDefaults', function() {
+    setup(function() {
+      this.defaultLayouts = [];
+      this.getLayouts = this.sinon.stub(KeyboardHelper, 'getLayouts',
+        function(options, callback) {
+          if (options.enabled) {
+            return callback([]);
+          }
+          if (options.default) {
+            var layout = { type: options.type };
+            this.defaultLayouts.push(layout);
+            return callback([layout]);
+          }
+        }.bind(this));
+      this.callback = this.sinon.spy();
+      KeyboardHelper.checkDefaults(this.callback);
+    });
+    test('enabled default layouts', function() {
+      assert.equal(this.defaultLayouts.length, 3);
+    });
+    test('called with default layouts', function() {
+      assert.deepEqual(this.callback.args[0][0], this.defaultLayouts);
     });
   });
 
@@ -535,9 +557,6 @@ suite('KeyboardHelper', function() {
       this.sinon.stub(KeyboardHelper, 'saveToSettings');
       MockNavigatorSettings.mReplyToRequests();
     });
-    test('does not trigger keyboardsrefresh', function() {
-      assert.isFalse(this.keyboardsrefresh.called);
-    });
     test('default settings loaded', function() {
       assert.deepEqual(KeyboardHelper.settings.enabled,
         defaultSettings.enabled);
@@ -553,9 +572,6 @@ suite('KeyboardHelper', function() {
       MockNavigatorSettings.mRequests[1].result[ENABLED_KEY] =
         'notjson';
       MockNavigatorSettings.mReplyToRequests();
-    });
-    test('does not trigger keyboardsrefresh', function() {
-      assert.isFalse(this.keyboardsrefresh.called);
     });
     test('default settings loaded', function() {
       assert.deepEqual(KeyboardHelper.settings.enabled,
@@ -586,6 +602,7 @@ suite('KeyboardHelper', function() {
     suite('setLayoutEnabled', function() {
       setup(function() {
         KeyboardHelper.setLayoutEnabled(keyboardAppOrigin, 'es', true);
+        KeyboardHelper.saveToSettings();
       });
       test('es layout enabled', function() {
         assert.isTrue(KeyboardHelper.getLayoutEnabled(keyboardAppOrigin, 'es'));
