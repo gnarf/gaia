@@ -1,7 +1,7 @@
 'use strict';
 
 function MockManifestHelper(manifest) {
-  for (prop in manifest) {
+  for (var prop in manifest) {
     this[prop] = manifest[prop];
   }
 }

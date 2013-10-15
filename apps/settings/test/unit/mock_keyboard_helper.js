@@ -1,16 +1,8 @@
 'use strict';
 
-var KeyboardHelper = {
-  keyboards: null,
-  keyboardSettings: null,
-
-  _setup: function() {
-    this._init();
-  },
-  _teardown: function() {
-    this._init();
-  },
-  _init: function() {
+var MockKeyboardHelper = {
+  mSetup: function() {
+    this.watchCallback = null;
     this.keyboards = [
       {
         origin: 'app://app1.gaiamobile.org',
@@ -28,7 +20,9 @@ var KeyboardHelper = {
               'name': 'layout1',
               'launch_path': '/index.html#layout1',
               'description': 'layout1',
-              'types': ['url', 'text']
+              'types': ['url', 'text'],
+              enabled: true,
+              'default': true
             },
             'layout2': {
               'name': 'layout2',
@@ -76,53 +70,52 @@ var KeyboardHelper = {
               'name': 'layout1',
               'launch_path': '/index.html#layout1',
               'description': 'layout1',
-              'types': ['number']
+              'types': ['number'],
+              enabled: true,
+              'default': true
             }
           }
         }
       }
     ];
 
-    this.keyboardSettings = [
-      {
-        appOrigin: 'app://app1.gaiamobile.org',
-        layoutId: 'layout1',
-        enabled: true
-      },
-      {
-        appOrigin: 'app://app1.gaiamobile.org',
-        layoutId: 'layout2',
-        enabled: false
-      },
-      {
-        appOrigin: 'app://app2.gaiamobile.org',
-        layoutId: 'layout1',
-        enabled: false
-      },
-      {
-        appOrigin: 'app://app3.gaiamobile.org',
-        layoutId: 'layout1',
-        enabled: true
-      }
-    ];
-  },
+    this.layouts = this.keyboards.reduce(function(carry, keyboard) {
+      var entryPoints = Object.keys(keyboard.manifest.entry_points);
+      var layouts = entryPoints.map(function(layoutId) {
+        var entryPoint = keyboard.manifest.entry_points[layoutId];
+        return {
+          app: keyboard,
+          manifest: keyboard.manifest,
+          entryPoint: entryPoint,
+          layoutId: layoutId,
+          enabled: entryPoint.enabled,
+          'default': entryPoint['default']
+        };
 
-  getInstalledKeyboards: function(callback) {
-    callback(this.keyboards);
+      });
+
+      return carry.concat(layouts);
+    }, []);
+  },
+  stopWatching: function() {
+    this.watchCallback = null;
+  },
+  watchLayouts: function(callback) {
+    this.watchCallback = callback;
+    callback(this.layouts, { apps: true, settings: true });
   },
   setLayoutEnabled: function(appOrigin, layoutId, enabled) {
-    for (var i = 0; i < this.keyboardSettings.length; i++) {
-      var layout = this.keyboardSettings[i];
-      if (layout.appOrigin === appOrigin &&
-          layout.layoutId === layoutId) {
+    this.layouts.some(function eachLayout(layout) {
+      if (layout.app.origin === appOrigin && layout.layoutId === layoutId) {
         layout.enabled = enabled;
-
-        var evt = document.createEvent('CustomEvent');
-        evt.initCustomEvent('keyboardsrefresh', true, false, {});
-        window.dispatchEvent(evt);
+        return true;
       }
+    });
+    if (this.watchCallback) {
+      console.log('calling watchCallback');
+      this.watchCallback(this.layouts, { settings: true });
     }
   }
 };
 
-KeyboardHelper._init();
+MockKeyboardHelper.mSuiteSetup = MockKeyboardHelper.mSetup;

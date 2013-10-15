@@ -1,26 +1,31 @@
 'use strict';
 
 requireApp('settings/test/unit/mock_l10n.js');
-requireApp('settings/test/unit/mocks_helper.js');
 requireApp('settings/test/unit/mock_keyboard_helper.js');
+requireApp('system/shared/test/unit/mocks/mock_manifest_helper.js');
+
 requireApp('settings/js/mvvm/models.js');
 requireApp('settings/js/mvvm/views.js');
-requireApp('../../shared/js/manifest_helper.js');
 requireApp('settings/js/keyboard.js');
 
 suite('keyboard >', function() {
+  var suiteSandbox = sinon.sandbox.create();
+  var mockHelper = new MocksHelper([
+    'KeyboardHelper',
+    'ManifestHelper'
+  ]).init();
+  mockHelper.attachTestHelpers();
   var realL10n;
 
   suiteSetup(function() {
     realL10n = navigator.mozL10n;
     navigator.mozL10n = MockL10n;
-
-    MockL10n.ready = function() {};
+    suiteSandbox.stub(MockL10n, 'ready');
   });
 
   suiteTeardown(function() {
     navigator.mozL10n = realL10n;
-    realL10n = null;
+    suiteSandbox.restore();
   });
 
   suite('KeyboardContext', function() {
@@ -51,7 +56,8 @@ suite('keyboard >', function() {
     var keyboardApp3 = null;
     var layouts = null;
 
-    suiteSetup(function(callback) {
+    setup(function(callback) {
+      KeyboardContext.init();
       KeyboardContext.keyboards(function(_keyboards) {
         keyboards = _keyboards;
 
@@ -80,7 +86,7 @@ suite('keyboard >', function() {
       });
     });
 
-    suiteTeardown(function() {
+    teardown(function() {
       keyboards = null;
       enabledLayouts = null;
     });

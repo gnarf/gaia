@@ -40,18 +40,29 @@ const TYPE_GROUP_MAPPING = {
 const FOCUS_CHANGE_DELAY = 20;
 
 var KeyboardManager = {
+  inputTypeTable: {},
   keyboardFrameContainer: document.getElementById('keyboards'),
 
-  // The set of installed keyboard layouts grouped by type_group.
-  // This is a map from type_group to an object arrays.
-  // Each element in the object arrays represents a keyboard layout:
-  // {
-  //    id: the unique id of the keyboard, the key of entry_point
-  //    name: the keyboard layout's name
-  //    appName: the keyboard app name
-  //    origin: the keyboard's origin
-  //    path: the keyboard's launch path
-  // }
+  /**
+   *
+   * The set of installed keyboard layouts grouped by type_group.
+   * This is a map from type_group to an object arrays.
+   *
+   * i.e:
+   * {
+   *   text: [ {...}, {...} ],
+   *   number: [ {...}, {...} ]
+   * }
+   *
+   * Each element in the arrays represents a keyboard layout:
+   * {
+   *    id: the unique id of the keyboard, the key of entry_point
+   *    name: the keyboard layout's name
+   *    appName: the keyboard app name
+   *    origin: the keyboard's origin
+   *    path: the keyboard's launch path
+   * }
+   */
   keyboardLayouts: {},
 
   // The set of running keyboards.
@@ -59,7 +70,6 @@ var KeyboardManager = {
   // 'keyboard.gaiamobile.org' : {
   //   'English': aIframe
   // }
-  inputTypeTable: {},
   runningLayouts: {},
   showingLayout: {
     frame: null,
@@ -82,7 +92,14 @@ var KeyboardManager = {
   keyboardHeight: 0,
 
   init: function km_init() {
-    var self = this;
+    // generate typeTable
+    this.inputTypeTable =
+    Object.keys(TYPE_GROUP_MAPPING).reduce(function(res, curr) {
+      var k = TYPE_GROUP_MAPPING[curr];
+      res[k] = res[k] || [];
+      res[k].push(curr);
+      return res;
+    }, {});
 
     this.notifIMEContainer =
             document.getElementById('keyboard-show-ime-list');
@@ -93,8 +110,8 @@ var KeyboardManager = {
 
     this.fakenoti.addEventListener('mousedown', function km_fakenotiAct(evt) {
         evt.preventDefault();
-        self.showAll();
-    });
+        this.showAll();
+    }.bind(this));
 
     this.keyboardFrameContainer.classList.add('hide');
 
@@ -115,105 +132,96 @@ var KeyboardManager = {
       var type = evt.detail.type;
       switch (type) {
         case 'inputmethod-showall':
-          self.showAll();
+          this.showAll();
           break;
         case 'inputmethod-next':
-          self.switchToNext();
+          this.switchToNext();
           break;
         case 'inputmethod-contextchange':
-          self.inputFocusChange(evt);
+          this.inputFocusChange(evt);
           break;
       }
-    });
+    }.bind(this));
 
-    window.addEventListener('localized', function(evt) {
-      self.updateLayouts(evt);
-    });
-
-    // generate typeTable
-    this.inputTypeTable =
-    Object.keys(TYPE_GROUP_MAPPING).reduce(function(res, curr) {
-      var k = TYPE_GROUP_MAPPING[curr];
-      res[k] = res[k] || [];
-      res[k].push(curr);
-      return res;
-    }, {});
+    LazyLoader.load([
+      'shared/js/keyboard_helper.js',
+      'shared/js/manifest_helper.js'
+    ], function() {
+      KeyboardHelper.watchLayouts(
+        { enabled: true }, this.updateLayouts.bind(this)
+      );
+    }.bind(this));
   },
 
   getHeight: function kn_getHeight() {
     return this.keyboardHeight;
   },
 
-  updateLayouts: function km_updateLayouts(evt) {
-    var self = this;
-    function resetLayoutList(apps) {
-      self.keyboardLayouts = {};
-      // filter out disabled layouts
-      self.parseLayoutType(apps);
-      self.showingLayout.reset();
-      var initType = self.showingLayout.type;
-      var initIndex = self.showingLayout.index;
-      self.launchLayoutFrame(self.keyboardLayouts[initType][initIndex]);
-
-      // Let chrome know about how many keyboards we have
-      // need to expose all input type from inputTypeTable
-      var layouts = {};
-      Object.keys(self.keyboardLayouts).forEach(function(k) {
-        var typeTable = self.inputTypeTable[k];
-        for (var i in typeTable) {
-          var inputType = typeTable[i];
-          layouts[inputType] = self.keyboardLayouts[k].length;
-        }
-      });
-
-      var event = document.createEvent('CustomEvent');
-      event.initCustomEvent('mozContentEvent', true, true, {
-        type: 'inputmethod-update-layouts',
-        layouts: layouts
-      });
-      window.dispatchEvent(event);
+  updateLayouts: function km_updateLayouts(layouts) {
+    // tiny helper - bound to the manifests
+    function getName() {
+      return this.name;
     }
-    KeyboardHelper.getInstalledKeyboards(resetLayoutList);
-  },
 
-  parseLayoutType: function km_parseLayoutType(apps) {
-    var self = this;
-    apps.forEach(function(app) {
-      var manifest = new ManifestHelper(app.manifest);
-      var entryPoints = manifest.entry_points;
-      for (var key in entryPoints) {
-        var entryPoint = entryPoints[key];
-        if (!entryPoint.types) {
-          console.warn('the keyboard app did not declare type.');
-          continue;
-        }
-        var appOrigin = app.origin;
-        var layoutId = key;
+    function reduceLayouts(carry, layout) {
+      // add the layout to each type and return the carry
+      layout.entryPoint.types.filter(KeyboardHelper.isKeyboardType)
+        .forEach(function(type) {
+          if (!carry[type]) {
+            carry[type] = [];
+            carry[type].activeLayout = 0;
+          }
+          var enabledLayout = {
+            id: layout.layoutId,
+            origin: layout.app.origin,
+            path: layout.entryPoint.launch_path
+          };
 
-        if (!KeyboardHelper.getLayoutEnabled(appOrigin, layoutId)) {
-          continue;
-        }
-
-        var supportTypes = entryPoint.types;
-        supportTypes.forEach(function(type) {
-          if (!type || !KeyboardHelper.isBaseType(type))
-            return;
-
-          if (!self.keyboardLayouts[type])
-            self.keyboardLayouts[type] = [];
-            self.keyboardLayouts[type].activeLayout = 0;
-
-          self.keyboardLayouts[type].push({
-            'id': key,
-            'name': entryPoint.name,
-            'appName': manifest.name,
-            'origin': app.origin,
-            'path': entryPoint.launch_path,
-            'index': self.keyboardLayouts[type].length
+          // define properties for name that resolve at display time
+          // to the correct language via the ManifestHelper
+          Object.defineProperties(enabledLayout, {
+            name: {
+              get: getName.bind(layout.entryPoint),
+              enumerable: true
+            },
+            appName: {
+              get: getName.bind(layout.manifest),
+              enumerable: true
+            }
           });
+          carry[type].push(enabledLayout);
         });
+
+      return carry;
+    }
+
+
+    this.keyboardLayouts = layouts.reduce(reduceLayouts, {});
+
+    this.showingLayout.reset();
+    var initType = this.showingLayout.type;
+    var initIndex = this.showingLayout.index;
+    this.launchLayoutFrame(this.keyboardLayouts[initType][initIndex]);
+
+    // Let chrome know about how many keyboards we have
+    // need to expose all input type from inputTypeTable
+    var layouts = {};
+    Object.keys(this.keyboardLayouts).forEach(function(k) {
+      var typeTable = this.inputTypeTable[k];
+      for (var i in typeTable) {
+        var inputType = typeTable[i];
+        layouts[inputType] = this.keyboardLayouts[k].length;
       }
+    }, this);
+
+    // TODO: Stop runningLayouts that aren't present anymore
+
+    var event = document.createEvent('CustomEvent');
+    event.initCustomEvent('mozContentEvent', true, true, {
+      type: 'inputmethod-update-layouts',
+      layouts: layouts
     });
+    window.dispatchEvent(event);
   },
 
   inputFocusChange: function km_inputFocusChange(evt) {
@@ -242,6 +250,7 @@ var KeyboardManager = {
         // if target group (input type) does not exist, use text for default
         if (!self.keyboardLayouts[group])
           group = 'text';
+
         self.setKeyboardToShow(group, self.keyboardLayouts[group].activeLayout);
         self.showKeyboard();
 
@@ -356,21 +365,10 @@ var KeyboardManager = {
       case 'appwillclose':
         this.hideKeyboard();
         break;
-      //XXX the following three cases haven't been tested.
+      //XXX the following case hasn't been tested.
       case 'mozbrowsererror': // OOM
         var origin = evt.target.dataset.frameOrigin;
         this.removeKeyboard(origin);
-        break;
-      case 'applicationinstallsuccess': //app installed
-        this.updateLayoutSettings();
-        break;
-      case 'applicationuninstall': //app uninstalled
-        var origin = evt.detail.application.origin;
-        this.removeKeyboard(origin);
-        this.updateLayoutSettings();
-        break;
-      case 'keyboardsrefresh': // keyboard settings update
-        this.updateLayouts();
         break;
     }
   },
@@ -390,44 +388,6 @@ var KeyboardManager = {
     }
 
     delete this.runningLayouts[origin];
-  },
-
-  updateLayoutSettings: function km_updateLayoutSettings() {
-    //KeyboardHelper.updateKeyboardSettings();
-    var temSettings = KeyboardHelper.keyboardSettings;
-    KeyboardHelper.getInstalledKeyboards(function(apps) {
-      KeyboardHelper.keyboardSettings = [];
-      apps.forEach(function(app) {
-        var entryPoints = app.manifest.entry_points;
-        for (var key in entryPoints) {
-          var launchPath = entryPoints[key].launch_path;
-          if (!entryPoints[key].types) {
-            console.warn('the keyboard app did not declare type.');
-            continue;
-          }
-          // for settings
-          KeyboardHelper.keyboardSettings.push({
-            layoutId: key,
-            appOrigin: app.origin,
-            enabled: false
-          });
-        }
-      });
-
-      for (var i in temSettings) {
-        if (!temSettings[i].enabled)
-          continue;
-        var layoutId = temSettings[i].layoutId;
-        var layoutOrigin = temSettings[i].appOrigin;
-        for (var j in KeyboardHelper.keyboardSettings) {
-          if (KeyboardHelper.keyboardSettings[j].layoutId === layoutId &&
-            KeyboardHelper.keyboardSettings[j].appOrigin === layoutOrigin) {
-            KeyboardHelper.keyboardSettings[j].enabled = true;
-          }
-        }
-      }
-      KeyboardHelper.saveToSettings();
-    });
   },
 
   setKeyboardToShow: function km_setKeyboardToShow(group, index) {
@@ -588,11 +548,9 @@ var KeyboardManager = {
 
 if (Applications.ready) {
   KeyboardManager.init();
-  LazyLoader.load('shared/js/keyboard_helper.js');
 } else {
   window.addEventListener('applicationready', function mozAppsReady(event) {
     window.removeEventListener('applicationready', mozAppsReady);
     KeyboardManager.init();
-    LazyLoader.load('shared/js/keyboard_helper.js');
   });
 }
