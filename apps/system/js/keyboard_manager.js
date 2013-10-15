@@ -195,11 +195,6 @@ var KeyboardManager = {
 
     this.keyboardLayouts = layouts.reduce(reduceLayouts, {});
 
-    this.showingLayout.reset();
-    var initType = this.showingLayout.type;
-    var initIndex = this.showingLayout.index;
-    this.launchLayoutFrame(this.keyboardLayouts[initType][initIndex]);
-
     // Let chrome know about how many keyboards we have
     // need to expose all input type from inputTypeTable
     var layouts = {};
@@ -234,8 +229,27 @@ var KeyboardManager = {
     // so wait a bit before responding to see if we get another.
     clearTimeout(this.focusChangeTimeout);
     this.focusChangeTimeout = setTimeout(function keyboardFocusChanged() {
+      function showKeyboard() {
+        KeyboardHelper.checkDefaults(function changedDefaults() {
+            KeyboardHelper.getLayouts({ enabled: true },
+              self.updateLayouts.bind(self));
+            KeyboardHelper.saveToSettings();
+        });
+        // if there are still no keyboards to use
+        if (!self.keyboardLayouts[group]) {
+          group = 'text';
+        }
+        self.setKeyboardToShow(group);
+        self.showKeyboard();
+
+        // We also want to show the permanent notification
+        // in the UtilityTray.
+        self.showIMESwitcher();
+      }
+
       var group = TYPE_GROUP_MAPPING[type];
-      var index = self.showingLayout.index;
+      var index = (self.showingLayout.type === type) ?
+        self.showingLayout.index : 0;
 
       if (type === 'blur') {
         self._debug('get blur event');
@@ -245,15 +259,14 @@ var KeyboardManager = {
         self._debug('get focus event');
         // by the order in Settings app, we should display
         // if target group (input type) does not exist, use text for default
-        if (!self.keyboardLayouts[group])
-          group = 'text';
+        if (!self.keyboardLayouts[group]) {
+          // ensure the helper has apps and settings data first:
+          KeyboardHelper.getLayouts(showKeyboard);
+        } else {
+          showKeyboard();
+        }
 
-        self.setKeyboardToShow(group, self.keyboardLayouts[group].activeLayout);
-        self.showKeyboard();
 
-        // We also want to show the permanent notification
-        // in the UtilityTray.
-        self.showIMESwitcher();
       }
     }, FOCUS_CHANGE_DELAY);
   },
@@ -388,6 +401,13 @@ var KeyboardManager = {
   },
 
   setKeyboardToShow: function km_setKeyboardToShow(group, index) {
+    if (!this.keyboardLayouts[group]) {
+      console.warn('trying to set a layout group to show that doesnt exist');
+      return;
+    }
+    if (index === undefined) {
+      index = this.keyboardLayouts[group].activeLayout;
+    }
     this._debug('set layout to display: type=' + group + ' index=' + index);
     this.showingLayout.type = group;
     this.showingLayout.index = index;
@@ -423,12 +443,16 @@ var KeyboardManager = {
    * @this
    */
   showIMESwitcher: function km_showIMESwitcher() {
+    var showed = this.showingLayout;
+    if (!this.keyboardLayouts[showed.type]) {
+      return;
+    }
+
     var _ = navigator.mozL10n.get;
 
     window.dispatchEvent(new CustomEvent('keyboardimeswitchershow'));
 
     // Need to make the message in spec: "FirefoxOS - English"...
-    var showed = this.showingLayout;
     var current = this.keyboardLayouts[showed.type][showed.index];
 
     this.fakenotiMessage.textContent = current.appName + ':' + current.name;
@@ -470,17 +494,11 @@ var KeyboardManager = {
     var showed = this.showingLayout;
 
     this.switchChangeTimeout = setTimeout(function keyboardSwitchLayout() {
-      // KeyboardHelper.checkDefaults(
-      //   function() {
-      //     console.log('defaulted!');
-      //   KeyboardHelper.saveToSettings.bind(KeyboardHelper)();
-      //   }
-      // );
-
+      if (!self.keyboardLayouts[showed.type]) {
+        showed.type = 'text';
+      }
       var length = self.keyboardLayouts[showed.type].length;
       var index = (showed.index + 1) % length;
-      if (!self.keyboardLayouts[showed.type])
-        showed.type = 'text';
       self.keyboardLayouts[showed.type].activeLayout = index;
       self.resetShowingKeyboard();
       self.setKeyboardToShow(showed.type, index);
@@ -531,8 +549,7 @@ var KeyboardManager = {
 
         // Mimic the success callback to show the current keyboard
         // when user canceled it.
-        var activeLayout = self.keyboardLayouts[showed.type].activeLayout;
-        self.setKeyboardToShow(showed.type, activeLayout);
+        self.setKeyboardToShow(showed.type);
         self.showKeyboard();
 
         // Hide the tray to show the app directly after
