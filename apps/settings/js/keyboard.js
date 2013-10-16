@@ -64,20 +64,14 @@ var KeyboardContext = (function() {
         name: name,
         description: description,
         types: types,
-        enabled: enabled
+        enabled: enabled,
+        disabled: false
       });
 
       // Layout enabled changed.
       _observable.observe('enabled', function(newValue, oldValue) {
         if (!_parsingApps) {
           KeyboardHelper.setLayoutEnabled(appOrigin, id, newValue);
-          // KeyboardHelper.checkDefaults(function defaultEnabled(defaults) {
-          //   var layout = defaults[0];
-          //   alert(navigator.mozL10n.get('defaultKeyboardEnabled', {
-          //     appName: layout.manifest.name,
-          //     layoutName: layout.entryPoint.name
-          //   }));
-          // });
           KeyboardHelper.saveToSettings();
         }
       });
@@ -137,6 +131,26 @@ var KeyboardContext = (function() {
     var enabled = layouts.filter(function filterEnabled(layout) {
       return layout.enabled;
     }).map(mapLayout);
+
+    // check each enabled layout to see if the checkbox should be disabled
+    enabled.forEach(function resetDisabledFlag(layout) {
+      layout.disabled = false;
+    });
+    var countApps = layouts.reduce(function countApps(carry, layout) {
+      if (layout.enabled) {
+        layout.entryPoint.types.forEach(function(type) {
+          if (carry[type]) {
+            carry[type].push(mapLayout(layout));
+          }
+        });
+      }
+      return carry;
+    }, { text: [], url: [], number: [] });
+    Object.keys(countApps).forEach(function checkCount(type) {
+      if (countApps[type].length === 1) {
+        countApps[type][0].disabled = true;
+      }
+    });
     _enabledLayouts.reset(enabled);
 
     _parsingApps = false;
@@ -358,10 +372,15 @@ var InstalledLayoutsPanel = (function() {
     var refreshCheckbox = function() {
       checkbox.checked = layout.enabled;
     };
+    var refreshDisabled = function() {
+      checkbox.disabled = layout.disabled;
+    };
     refreshCheckbox();
+    refreshDisabled();
     refreshName();
     layout.observe('name', refreshName);
     layout.observe('enabled', refreshCheckbox);
+    layout.observe('disabled', refreshDisabled);
 
     return container;
   };

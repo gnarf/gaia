@@ -42,6 +42,12 @@ label.pack-radio input + span {
   background: url(switches/images/radio/default.png) no-repeat center top / 2.2rem auto;
 }
 
+label.pack-checkbox input:checked[disabled] + span,
+label.pack-radio input:checked[disabled] + span,
+label.pack-switch input:checked[disabled] + span {
+  opacity: 0.5;
+}
+
 label.pack-checkbox input:checked + span,
 label.pack-radio input:checked + span,
 label.pack-switch input:checked + span {
