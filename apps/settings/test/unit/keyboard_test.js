@@ -2,7 +2,7 @@
 
 requireApp('settings/test/unit/mock_l10n.js');
 requireApp('settings/test/unit/mock_keyboard_helper.js');
-requireApp('system/shared/test/unit/mocks/mock_manifest_helper.js');
+require('/shared/test/unit/mocks/mock_manifest_helper.js');
 
 requireApp('settings/js/mvvm/models.js');
 requireApp('settings/js/mvvm/views.js');
