@@ -7,8 +7,7 @@
         'dom.mms.operatorSizeLimitation' : 300
       },
       removedObservers = {},
-      requests = [],
-      replyTimeout;
+      requests = [];
 
   function mns_mLockSet(obj) {
     // Set values.
@@ -30,7 +29,6 @@
   }
 
   function mns_mReplyToRequests() {
-    clearTimeout(replyTimeout);
     try {
       requests.forEach(function(request) {
         if (request.onsuccess) {
@@ -55,11 +53,15 @@
       }
     };
 
-    clearTimeout(replyTimeout);
     if (!MockNavigatorSettings.mSyncRepliesOnly) {
-      replyTimeout = setTimeout(mns_mReplyToRequests);
+      setTimeout(function() {
+        if (settingsRequest.onsuccess) {
+          settingsRequest.onsuccess();
+        }
+      });
+    } else {
+      requests.push(settingsRequest);
     }
-    requests.push(settingsRequest);
 
     return settingsRequest;
   }
@@ -103,7 +105,6 @@
     settings = {};
     removedObservers = {};
     requests = [];
-    clearTimeout(replyTimeout);
   }
 
   window.MockNavigatorSettings = {
