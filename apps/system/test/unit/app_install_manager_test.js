@@ -3,7 +3,7 @@
 requireApp('system/test/unit/mock_app.js');
 requireApp('system/test/unit/mock_chrome_event.js');
 requireApp('system/test/unit/mock_statusbar.js');
-requireApp('shared/test/unit/mocks/mock_manifest_helper.js');
+require('/shared/test/unit/mocks/mock_manifest_helper.js');
 requireApp('system/test/unit/mock_system_banner.js');
 requireApp('system/test/unit/mock_notification_screen.js');
 requireApp('system/test/unit/mock_applications.js');
