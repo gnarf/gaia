@@ -852,6 +852,7 @@ window.addEventListener('load', function loadSettings() {
       startupLocale);
     LazyLoader.load([
       'shared/js/keyboard_helper.js',
+      'shared/js/manifest_helper.js',
       'js/airplane_mode.js',
       'js/battery.js',
       'shared/js/async_storage.js',

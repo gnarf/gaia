@@ -71,13 +71,36 @@ var KeyboardContext = (function() {
       _observable.observe('enabled', function(newValue, oldValue) {
         if (!_parsingApps) {
           KeyboardHelper.setLayoutEnabled(appOrigin, id, newValue);
-          // KeyboardHelper.checkDefaults(function defaultEnabled(defaults) {
-          //   var layout = defaults[0];
-          //   alert(navigator.mozL10n.get('defaultKeyboardEnabled', {
-          //     appName: layout.manifest.name,
-          //     layoutName: layout.entryPoint.name
-          //   }));
-          // });
+
+
+          KeyboardHelper.checkDefaults(function defaultEnabled(defaults) {
+            var layout = defaults[0];
+            var l10n = navigator.mozL10n;
+            l10n.localize(
+              document.getElementById('keyboard-default-title'),
+              'mustHaveOneKeyboard',
+              {
+                type: l10n.get('keyboardType-' +
+                  layout.entryPoint.types.sort()[0])
+              }
+            );
+            l10n.localize(
+              document.getElementById('keyboard-default-text'),
+              'defaultKeyboardEnabled',
+              {
+                layoutName: layout.entryPoint.name,
+                appName: layout.manifest.name
+              }
+            );
+            openDialog('keyboard-enabled-default');
+
+            // implemented as an alert for now
+            // alert(navigator.mozL10n.get('defaultKeyboardEnabled', {
+            //   appName: layout.manifest.name,
+            //   layoutName: layout.entryPoint.name
+            // }));
+          });
+
           KeyboardHelper.saveToSettings();
         }
       });
