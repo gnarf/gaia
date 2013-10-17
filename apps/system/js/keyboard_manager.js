@@ -155,12 +155,15 @@ var KeyboardManager = {
   },
 
   updateLayouts: function km_updateLayouts(layouts) {
+    var enabledApps = new Set();
+
     // tiny helper - bound to the manifests
     function getName() {
       return this.name;
     }
 
     function reduceLayouts(carry, layout) {
+      enabledApps.add(layout.app.origin);
       // add the layout to each type and return the carry
       layout.entryPoint.types.filter(KeyboardHelper.isKeyboardType)
         .forEach(function(type) {
@@ -197,23 +200,28 @@ var KeyboardManager = {
 
     // Let chrome know about how many keyboards we have
     // need to expose all input type from inputTypeTable
-    var layouts = {};
+    var countLayouts = {};
     Object.keys(this.keyboardLayouts).forEach(function(k) {
       var typeTable = this.inputTypeTable[k];
       for (var i in typeTable) {
         var inputType = typeTable[i];
-        layouts[inputType] = this.keyboardLayouts[k].length;
+        countLayouts[inputType] = this.keyboardLayouts[k].length;
       }
     }, this);
-
-    // TODO: Stop runningLayouts that aren't present anymore
 
     var event = document.createEvent('CustomEvent');
     event.initCustomEvent('mozContentEvent', true, true, {
       type: 'inputmethod-update-layouts',
-      layouts: layouts
+      layouts: countLayouts
     });
     window.dispatchEvent(event);
+
+    // Remove apps that are no longer enabled to clean up.
+    Object.keys(this.runningLayouts).forEach(function withRunningApps(origin) {
+      if (!enabledApps.has(origin)) {
+        this.removeKeyboard(origin);
+      }
+    }, this);
   },
 
   inputFocusChange: function km_inputFocusChange(evt) {
@@ -384,16 +392,22 @@ var KeyboardManager = {
   },
 
   removeKeyboard: function km_removeKeyboard(origin) {
-    if (!this.runningLayouts.hasOwnProperty(origin))
+    if (!this.runningLayouts.hasOwnProperty(origin)) {
       return;
+    }
 
-    if (this.showingLayout.frame.dataset.frameOrigin === origin) {
+    if (this.showingLayout.frame &&
+      this.showingLayout.frame.dataset.frameOrigin === origin) {
       this.hideKeyboard();
     }
 
     for (var id in this.runningLayouts[origin]) {
       var frame = this.runningLayouts[origin][id];
-      windows.removeChild(frame);
+      try {
+        windows.removeChild(frame);
+      } catch (e) {
+        // if it doesn't work, noone cares
+      }
       delete this.runningLayouts[origin][id];
     }
 
