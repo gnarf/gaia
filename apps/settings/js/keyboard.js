@@ -72,7 +72,6 @@ var KeyboardContext = (function() {
         if (!_parsingApps) {
           KeyboardHelper.setLayoutEnabled(appOrigin, id, newValue);
 
-
           KeyboardHelper.checkDefaults(function defaultEnabled(defaults) {
             var layout = defaults[0];
             var l10n = navigator.mozL10n;
@@ -93,12 +92,6 @@ var KeyboardContext = (function() {
               }
             );
             openDialog('keyboard-enabled-default');
-
-            // implemented as an alert for now
-            // alert(navigator.mozL10n.get('defaultKeyboardEnabled', {
-            //   appName: layout.manifest.name,
-            //   layoutName: layout.entryPoint.name
-            // }));
           });
 
           KeyboardHelper.saveToSettings();

@@ -1,5 +1,6 @@
 'use strict';
 
+mocha.globals(['openDialog']);
 requireApp('settings/test/unit/mock_l10n.js');
 requireApp('settings/test/unit/mock_keyboard_helper.js');
 require('/shared/test/unit/mocks/mock_manifest_helper.js');
@@ -180,6 +181,9 @@ suite('keyboard >', function() {
     });
 
     suite('enabledLayouts', function() {
+      setup(function() {
+        this.checkDefaults = this.sinon.stub(KeyboardHelper, 'checkDefaults');
+      });
       var isActuallyEnabled = function(targetLayout) {
         var found = false;
         enabledLayouts.forEach(function(layout) {
@@ -211,42 +215,105 @@ suite('keyboard >', function() {
         var targetLayout = layouts[0][0];
         targetLayout.enabled = false;
         assert.isFalse(isActuallyEnabled(targetLayout));
+        assert.isTrue(this.checkDefaults.called);
       });
 
       test('Enable app1 layout1', function() {
         var targetLayout = layouts[0][0];
         targetLayout.enabled = true;
         assert.isTrue(isActuallyEnabled(targetLayout));
+        // didn't actually change!
+        assert.isFalse(this.checkDefaults.called);
       });
 
       test('Disable app1 layout1', function() {
         var targetLayout = layouts[0][0];
         targetLayout.enabled = false;
         assert.isFalse(isActuallyEnabled(targetLayout));
+        assert.isTrue(this.checkDefaults.called);
       });
 
       test('Enable app1 layout2', function() {
         var targetLayout = layouts[0][1];
         targetLayout.enabled = true;
         assert.isTrue(isActuallyEnabled(targetLayout));
+        assert.isTrue(this.checkDefaults.called);
       });
 
       test('Enable app2 layout1', function() {
         var targetLayout = layouts[1][0];
         targetLayout.enabled = true;
         assert.isTrue(isActuallyEnabled(targetLayout));
+        assert.isTrue(this.checkDefaults.called);
       });
 
       test('Disable app3 layout1', function() {
         var targetLayout = layouts[2][0];
         targetLayout.enabled = false;
         assert.isFalse(isActuallyEnabled(targetLayout));
+        assert.isTrue(this.checkDefaults.called);
       });
 
       test('Disable app2 layout1', function() {
         var targetLayout = layouts[1][0];
         targetLayout.enabled = false;
         assert.isFalse(isActuallyEnabled(targetLayout));
+        assert.isTrue(this.checkDefaults.called);
+      });
+
+      suite('Checks defaults', function() {
+        setup(function() {
+          layouts[0][0].enabled = false;
+        });
+        test('calls checkDefaults', function() {
+          assert.isTrue(this.checkDefaults.called);
+        });
+        suite('Shows dialog if default enabled', function() {
+          setup(function() {
+            this.title = document.createElement('h1');
+            this.title.id = 'keyboard-default-title';
+            document.body.appendChild(this.title);
+
+            this.text = document.createElement('p');
+            this.text.id = 'keyboard-default-text';
+            document.body.appendChild(this.text);
+
+            this.get = this.sinon.spy(navigator.mozL10n, 'get');
+            this.localize = this.sinon.stub(navigator.mozL10n, 'localize');
+            this.openDialog = this.sinon.stub(window, 'openDialog');
+            this.checkDefaults.yield([{
+              manifest: { name: 'appName' },
+              entryPoint: {
+                types: ['url', 'text'],
+                name: 'layoutName'
+              }
+            }]);
+          });
+          teardown(function() {
+            document.body.removeChild(this.title);
+            document.body.removeChild(this.text);
+          });
+          test('localizes title with type', function() {
+            // gets localized string for type
+            assert.isTrue(this.get.calledWith('keyboardType-text'));
+            // localizes element
+            assert.deepEqual(this.localize.args[0], [
+              this.title,
+              'mustHaveOneKeyboard',
+              { type: 'keyboardType-text' }
+            ]);
+          });
+          test('localizes text with layout details', function() {
+            // gets localized string for type
+            assert.isTrue(this.get.calledWith('keyboardType-text'));
+            // localizes element
+            assert.deepEqual(this.localize.args[1], [
+              this.title,
+              'defaultKeyboardEnabled',
+              { appName: 'appName', layoutName: 'layoutName' }
+            ]);
+          });
+        });
       });
     });
   });
