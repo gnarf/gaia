@@ -379,28 +379,35 @@ var InstalledLayoutsPanel = (function() {
     return container;
   };
 
+  var _redrawKeyboards = function(keyboards) {
+    var container = document.getElementById('keyboardAppContainer');
+    container.innerHTML = '';
+
+    keyboards.forEach(function(keyboard) {
+      var header = document.createElement('header');
+      var h2 = document.createElement('h2');
+      var ul = document.createElement('ul');
+
+      var refreshName = function() {
+        h2.textContent = keyboard.name;
+      };
+      keyboard.observe('name', refreshName);
+      refreshName();
+
+      header.appendChild(h2);
+      container.appendChild(header);
+      container.appendChild(ul);
+      var listView = ListView(ul, keyboard.layouts,
+        _layoutTemplate);
+      listView.enabled = _panel.visible;
+      _listViews.push(listView);
+    });
+  };
+
   var _initInstalledLayoutListView = function() {
     KeyboardContext.keyboards(function(keyboards) {
-      var container = document.getElementById('keyboardAppContainer');
-      keyboards.forEach(function(keyboard) {
-        var header = document.createElement('header');
-        var h2 = document.createElement('h2');
-        var ul = document.createElement('ul');
-
-        var refreshName = function() {
-          h2.textContent = keyboard.name;
-        };
-        keyboard.observe('name', refreshName);
-        refreshName();
-
-        header.appendChild(h2);
-        container.appendChild(header);
-        container.appendChild(ul);
-        var listView = ListView(ul, keyboard.layouts,
-          _layoutTemplate);
-        listView.enabled = _panel.visible;
-        _listViews.push(listView);
-      });
+      keyboards.observe('reset', _redrawKeyboards.bind(null, keyboards));
+      _redrawKeyboards(keyboards);
     });
   };
 

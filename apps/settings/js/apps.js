@@ -27,9 +27,10 @@ var ApplicationsList = {
   },
 
   init: function al_init() {
-    var appsMgmt = navigator.mozApps.mgmt;
-    appsMgmt.oninstall = this.oninstall.bind(this);
-    appsMgmt.onuninstall = this.onuninstall.bind(this);
+    window.addEventListener('applicationinstall',
+      this.oninstall.bind(this));
+    window.addEventListener('applicationuninstall',
+      this.onuninstall.bind(this));
 
     this.uninstallButton.addEventListener('click', this);
     this.container.addEventListener('click', this);
@@ -177,7 +178,7 @@ var ApplicationsList = {
   },
 
   oninstall: function al_oninstall(evt) {
-    var app = evt.application;
+    var app = evt.detail.app;
 
     this._apps.push(app);
     this._sortApps();
@@ -189,7 +190,7 @@ var ApplicationsList = {
     var app;
     var appIndex;
     this._apps.some(function findApp(anApp, index) {
-      if (anApp.origin === evt.application.origin) {
+      if (anApp.origin === evt.detail.app.origin) {
         app = anApp;
         appIndex = index;
         return true;
@@ -197,8 +198,9 @@ var ApplicationsList = {
       return false;
     });
 
-    if (!app)
+    if (!app) {
       return;
+    }
 
     Settings.currentPanel = '#appPermissions';
 

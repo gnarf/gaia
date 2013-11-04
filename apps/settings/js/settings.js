@@ -104,6 +104,23 @@ var Settings = {
     // very soon in startup after the DOM is available.
     this.getSettings(null);
 
+    // We need to dispatch the following events because
+    // mozApps is not doing so right now.
+    // ref: https://bugzilla.mozilla.org/show_bug.cgi?id=731746
+    function fireAppEvent(type, event) {
+      if (event.application) {
+        var evt = document.createEvent('CustomEvent');
+        evt.initCustomEvent(type,
+          /* canBubble */ true, /* cancelable */ false,
+          { app: event.application });
+        window.dispatchEvent(evt);
+      }
+    }
+
+    var appsMgmt = navigator.mozApps.mgmt;
+    appsMgmt.oninstall = fireAppEvent.bind(null, 'applicationinstall');
+    appsMgmt.onuninstall = fireAppEvent.bind(null, 'applicationuninstall');
+
     // update corresponding setting when it changes
     settings.onsettingchange = (function settingChanged(event) {
       var key = event.settingName;

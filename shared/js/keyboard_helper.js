@@ -290,6 +290,7 @@ var KeyboardHelper = exports.KeyboardHelper = {
       settings.addObserver(SETTINGS_KEYS.DEFAULT, kh_getSettings);
     }
 
+    window.addEventListener('applicationinstall', this);
     window.addEventListener('applicationinstallsuccess', this);
     window.addEventListener('applicationuninstall', this);
   },
