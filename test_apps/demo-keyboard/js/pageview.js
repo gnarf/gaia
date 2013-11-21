@@ -6,6 +6,8 @@
   // XXX: get rid of it somehow
   const MARGIN = 2;
 
+  var sideTable = new WeakMap();
+
   // Look up the HTML templates we'll use for building the keyboard page
   var templates = {
     page: document.getElementById('keyboard-page-template'),
@@ -23,6 +25,10 @@
   });
 
   function KeyboardPageView(page) {
+    sideTable.set(this, {
+      locked: false,
+      shifted: false
+    });
     this.page = page;             // Our KeyboardPage model
     this.element = null;          // The toplevel HTML element for this view
     this.alternativesMenu = null; // Alternatives menu element
@@ -262,23 +268,29 @@
     this.element.classList.remove('hidden');
   };
 
-  KeyboardPageView.prototype.setShiftState = function(shifted, locked) {
-    this.shifted = shifted;
-    this.locked = locked;
-
-    if (locked) {
-      this.element.classList.add('shifted');
-      this.element.classList.add('locked');
+  Object.defineProperties(KeyboardPageView.prototype, {
+    shifted: {
+      get: function () {
+        return !!sideTable.get(this).shifted;
+      },
+      set: function (value) {
+        sideTable.get(this).shifted = this.locked || !!value;
+        this.element.classList[value?'add':'remove']('shifted');
+      }
+    },
+    locked: {
+      get: function () {
+        return !!sideTable.get(this).locked;
+      },
+      set: function (value) {
+        sideTable.get(this).locked = !!value;
+        this.element.classList[value?'add':'remove']('locked');
+        if (value) {
+          this.shifted = true;
+        }
+      }
     }
-    else if (shifted) {
-      this.element.classList.add('shifted');
-      this.element.classList.remove('locked');
-    }
-    else {
-      this.element.classList.remove('shifted');
-      this.element.classList.remove('locked');
-    }
-  };
+  });
 
   exports.KeyboardPageView = KeyboardPageView;
 }(window));

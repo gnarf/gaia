@@ -16,21 +16,21 @@
     // XXX: better to look up the key and switch on the key command 'shift'
     // instead of hardcoding the name here?
     switch (keyname) {
+
     case 'SHIFT':
       if (currentPageView.locked) {
-        currentPageView.setShiftState(false, false);
-      }
-      else if (currentPageView.shifted) {
+        // unlock and turn off shift
+        currentPageView.locked = false;
+        currentPageView.shifted = false;
+      } else if (currentPageView.shifted) {
         if (lastShiftTime &&
             (e.timeStamp - lastShiftTime) / 1000 < CAPS_LOCK_INTERVAL) {
-          currentPageView.setShiftState(true, true);
+          currentPageView.locked = true;
+        } else {
+          currentPageView.shifted = false;
         }
-        else {
-          currentPageView.setShiftState(false, false);
-        }
-      }
-      else {
-        currentPageView.setShiftState(true, false);
+      } else {
+        currentPageView.shifted = true;
       }
       lastShiftTime = e.timeStamp;
       e.stopImmediatePropagation();
@@ -58,8 +58,6 @@
     // the shift key on, but we do still want to turn it off after a
     // single use. So be careful when making this configurable.
     var newvalue = InputField.atSentenceStart();
-    if (newvalue !== currentPageView.shifted) {
-      currentPageView.setShiftState(newvalue, false);
-    }
+    currentPageView.shifted = newvalue;
   }
 }(window));
